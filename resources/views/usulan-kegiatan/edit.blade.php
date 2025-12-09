@@ -1,0 +1,321 @@
+@extends('layouts/contentNavbarLayout')
+
+@section('title', 'Edit Usulan Kegiatan')
+
+@section('content')
+    <!-- Header Section -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+        <div class="mb-3 mb-md-0">
+            <h4 class="fw-bold text-primary mb-1">
+                <i class="bx bx-edit-alt"></i> Edit Usulan Kegiatan
+            </h4>
+            <p class="text-muted mb-0">Ubah data usulan: {{ $usulanKegiatan->nama_kegiatan }}</p>
+        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-style1 mb-0">
+                <li class="breadcrumb-item">
+                    <a href="{{ route('dashboard-analytics') }}" class="text-muted">Dashboard</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{{ route('usulan-kegiatan.index') }}" class="text-muted">Usulan Kegiatan</a>
+                </li>
+                <li class="breadcrumb-item active">Edit Usulan</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-12">
+            <!-- Form -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-sm me-3"
+                            style="background: linear-gradient(135deg, #f3541d 0%, #ff7849 100%); border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bx bx-edit text-white" style="font-size: 20px;"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0" style="color: #495057; font-weight: 600;">Form Edit Usulan</h5>
+                            <p class="mb-0 small text-muted">Perbarui data usulan kegiatan</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('usulan-kegiatan.update', $usulanKegiatan) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+
+                        <!-- Informasi Dasar -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bx bx-info-circle me-1"></i>
+                                    Informasi Dasar
+                                </h6>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="nama_kegiatan" class="form-label">Nama Kegiatan <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control @error('nama_kegiatan') is-invalid @enderror"
+                                    id="nama_kegiatan" name="nama_kegiatan"
+                                    value="{{ old('nama_kegiatan', $usulanKegiatan->nama_kegiatan) }}"
+                                    placeholder="Contoh: Workshop Web Development">
+                                @error('nama_kegiatan')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="deskripsi_kegiatan" class="form-label">Deskripsi Kegiatan <span
+                                        class="text-danger">*</span></label>
+                                <textarea class="form-control @error('deskripsi_kegiatan') is-invalid @enderror" id="deskripsi_kegiatan"
+                                    name="deskripsi_kegiatan" rows="4" placeholder="Jelaskan tujuan, manfaat, dan target peserta kegiatan">{{ old('deskripsi_kegiatan', $usulanKegiatan->deskripsi_kegiatan) }}</textarea>
+                                @error('deskripsi_kegiatan')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="jenis_kegiatan" class="form-label">Jenis Kegiatan <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select @error('jenis_kegiatan') is-invalid @enderror"
+                                    id="jenis_kegiatan" name="jenis_kegiatan">
+                                    <option value="">Pilih Jenis Kegiatan</option>
+                                    <option value="seminar"
+                                        {{ old('jenis_kegiatan', $usulanKegiatan->jenis_kegiatan) == 'seminar' ? 'selected' : '' }}>
+                                        Seminar</option>
+                                    <option value="workshop"
+                                        {{ old('jenis_kegiatan', $usulanKegiatan->jenis_kegiatan) == 'workshop' ? 'selected' : '' }}>
+                                        Workshop</option>
+                                    <option value="pelatihan"
+                                        {{ old('jenis_kegiatan', $usulanKegiatan->jenis_kegiatan) == 'pelatihan' ? 'selected' : '' }}>
+                                        Pelatihan</option>
+                                    <option value="lomba"
+                                        {{ old('jenis_kegiatan', $usulanKegiatan->jenis_kegiatan) == 'lomba' ? 'selected' : '' }}>
+                                        Lomba</option>
+                                    <option value="lainnya"
+                                        {{ old('jenis_kegiatan', $usulanKegiatan->jenis_kegiatan) == 'lainnya' ? 'selected' : '' }}>
+                                        Lainnya</option>
+                                </select>
+                                @error('jenis_kegiatan')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="tempat_kegiatan" class="form-label">Tempat Kegiatan <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control @error('tempat_kegiatan') is-invalid @enderror"
+                                    id="tempat_kegiatan" name="tempat_kegiatan"
+                                    value="{{ old('tempat_kegiatan', $usulanKegiatan->tempat_kegiatan) }}"
+                                    placeholder="Contoh: Aula Universitas">
+                                @error('tempat_kegiatan')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <!-- Jadwal & Pendanaan -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bx bx-calendar me-1"></i>
+                                    Jadwal & Pendanaan
+                                </h6>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="tanggal_mulai" class="form-label">Tanggal Mulai <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" class="form-control @error('tanggal_mulai') is-invalid @enderror"
+                                    id="tanggal_mulai" name="tanggal_mulai"
+                                    value="{{ old('tanggal_mulai', $usulanKegiatan->tanggal_mulai->format('Y-m-d')) }}">
+                                @error('tanggal_mulai')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="tanggal_akhir" class="form-label">Tanggal Akhir <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" class="form-control @error('tanggal_akhir') is-invalid @enderror"
+                                    id="tanggal_akhir" name="tanggal_akhir"
+                                    value="{{ old('tanggal_akhir', $usulanKegiatan->tanggal_akhir->format('Y-m-d')) }}">
+                                @error('tanggal_akhir')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="jenis_pendanaan" class="form-label">Jenis Pendanaan <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-select @error('jenis_pendanaan') is-invalid @enderror"
+                                    id="jenis_pendanaan" name="jenis_pendanaan">
+                                    <option value="">Pilih Jenis Pendanaan</option>
+                                    <option value="mandiri"
+                                        {{ old('jenis_pendanaan', $usulanKegiatan->jenis_pendanaan) == 'mandiri' ? 'selected' : '' }}>
+                                        Mandiri</option>
+                                    <option value="sponsor"
+                                        {{ old('jenis_pendanaan', $usulanKegiatan->jenis_pendanaan) == 'sponsor' ? 'selected' : '' }}>
+                                        Sponsor</option>
+                                    <option value="hibah"
+                                        {{ old('jenis_pendanaan', $usulanKegiatan->jenis_pendanaan) == 'hibah' ? 'selected' : '' }}>
+                                        Hibah</option>
+                                    <option value="internal"
+                                        {{ old('jenis_pendanaan', $usulanKegiatan->jenis_pendanaan) == 'internal' ? 'selected' : '' }}>
+                                        Internal</option>
+                                </select>
+                                @error('jenis_pendanaan')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="status_kegiatan" class="form-label">Status Kegiatan</label>
+                                <select class="form-select @error('status_kegiatan') is-invalid @enderror"
+                                    id="status_kegiatan" name="status_kegiatan">
+                                    <option value="draft"
+                                        {{ old('status_kegiatan', $usulanKegiatan->status_kegiatan) == 'draft' ? 'selected' : '' }}>
+                                        Draft</option>
+                                    <option value="submitted"
+                                        {{ old('status_kegiatan', $usulanKegiatan->status_kegiatan) == 'submitted' ? 'selected' : '' }}>
+                                        Submitted</option>
+                                    <option value="review"
+                                        {{ old('status_kegiatan', $usulanKegiatan->status_kegiatan) == 'review' ? 'selected' : '' }}>
+                                        Review</option>
+                                    <option value="approved"
+                                        {{ old('status_kegiatan', $usulanKegiatan->status_kegiatan) == 'approved' ? 'selected' : '' }}>
+                                        Approved</option>
+                                    <option value="rejected"
+                                        {{ old('status_kegiatan', $usulanKegiatan->status_kegiatan) == 'rejected' ? 'selected' : '' }}>
+                                        Rejected</option>
+                                </select>
+                                @error('status_kegiatan')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <!-- Info Pengaju -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bx bx-user me-1"></i>
+                                    Informasi Pengaju
+                                </h6>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Pengaju</label>
+                                <div class="form-control-plaintext bg-light rounded p-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-xs me-2">
+                                            <div class="avatar-initial bg-primary text-white rounded-circle">
+                                                {{ substr($usulanKegiatan->user->username, 0, 1) }}
+                                            </div>
+                                        </div>
+                                        {{ $usulanKegiatan->user->username }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tanggal Dibuat</label>
+                                <div class="form-control-plaintext bg-light rounded p-2">
+                                    {{ $usulanKegiatan->created_at->format('d/m/Y H:i') }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ route('usulan-kegiatan.index') }}" class="btn btn-outline-secondary">
+                                <i class="bx bx-arrow-back me-1"></i>
+                                Kembali
+                            </a>
+                            <div>
+                                <a href="{{ route('usulan-kegiatan.show', $usulanKegiatan) }}"
+                                    class="btn btn-outline-info me-2">
+                                    <i class="bx bx-show me-1"></i>
+                                    Detail
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bx bx-save me-1"></i>
+                                    Update Usulan
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!--/ Form -->
+        </div>
+    </div>
+@endsection
+
+@push('scripts')
+    <script>
+        // Function to show dynamic toast
+        function showToast(type, title, message) {
+            const toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) return;
+
+            const toastId = 'toast-' + Date.now();
+            const iconMap = {
+                'success': 'bx-check-circle',
+                'error': 'bx-x-circle',
+                'warning': 'bx-error',
+                'info': 'bx-info-circle'
+            };
+
+            const toastHTML = `
+                <div id="${toastId}" class="bs-toast toast fade bg-${type}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                    <div class="toast-header bg-white">
+                        <i class='bx ${iconMap[type]} me-2 text-${type}'></i>
+                        <div class="me-auto fw-medium text-${type}">${title}</div>
+                        <small class="text-muted">Sekarang</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body text-white">
+                        ${message}
+                    </div>
+                </div>
+            `;
+
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+
+            // Remove element after it's hidden
+            toastElement.addEventListener('hidden.bs.toast', function() {
+                toastElement.remove();
+            });
+        }
+
+        $(document).ready(function() {
+            // Validasi tanggal
+            $('#tanggal_mulai').on('change', function() {
+                var startDate = $(this).val();
+                $('#tanggal_akhir').attr('min', startDate);
+
+                var endDate = $('#tanggal_akhir').val();
+                if (endDate && endDate < startDate) {
+                    $('#tanggal_akhir').val(startDate);
+                }
+            });
+
+            $('#tanggal_akhir').on('change', function() {
+                var endDate = $(this).val();
+                var startDate = $('#tanggal_mulai').val();
+
+                if (startDate && endDate < startDate) {
+                    // Show toast warning instead of alert
+                    showToast('warning', 'Peringatan', 'Tanggal akhir tidak boleh sebelum tanggal mulai!');
+                    $(this).val(startDate);
+                }
+            });
+        });
+    </script>
+@endpush

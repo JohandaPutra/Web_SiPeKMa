@@ -1,0 +1,135 @@
+@extends('layouts/contentNavbarLayout')
+
+@section('title', 'Daftar Proposal Kegiatan')
+
+@section('content')
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+    <div class="mb-3 mb-md-0">
+        <h4 class="fw-bold text-primary mb-1">
+            Proposal Kegiatan
+        </h4>
+        <p class="text-muted mb-0">Kelola dan review proposal kegiatan</p>
+    </div>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-style1 mb-0">
+            <li class="breadcrumb-item">
+                <a href="{{ route('dashboard-analytics') }}" class="text-muted">Dashboard</a>
+            </li>
+            <li class="breadcrumb-item active">Proposal Kegiatan</li>
+        </ol>
+    </nav>
+</div>
+
+@include('_partials/toast')
+
+<!-- Proposal List -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            Daftar Proposal
+            <span class="badge bg-label-info ms-2">{{ $kegiatans->count() }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        @if($kegiatans->count() > 0)
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Kegiatan</th>
+                        <th>Jenis Kegiatan</th>
+                        <th>Tanggal Kegiatan</th>
+                        @if(!Auth::user()->isHima())
+                        <th>{{ Auth::user()->isWadek() ? 'Diajukan Oleh' : 'Diajukan Tanggal' }}</th>
+                        @endif
+                        <th>File</th>
+                        <th>Status</th>
+                        <th>Tahap Approval</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($kegiatans as $index => $kegiatan)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>
+                            <strong>{{ $kegiatan->nama_kegiatan }}</strong>
+                            <br><small class="text-muted">{{ Str::limit($kegiatan->deskripsi_kegiatan, 50) }}</small>
+                        </td>
+                        <td><span class="badge bg-label-info">{{ $kegiatan->jenis_kegiatan }}</span></td>
+                        <td>
+                            <small>
+                                {{ $kegiatan->tanggal_mulai->format('d M Y') }}<br>
+                                s/d {{ $kegiatan->tanggal_akhir->format('d M Y') }}
+                            </small>
+                        </td>
+                        @if(!Auth::user()->isHima())
+                        <td>
+                            @if(Auth::user()->isWadek())
+                                {{ $kegiatan->user->name }}
+                            @else
+                                <small>{{ $kegiatan->created_at->format('d M Y') }}</small>
+                            @endif
+                        </td>
+                        @endif
+                        <td>
+                            @php
+                                $proposalFile = $kegiatan->getFileByTahap('proposal');
+                            @endphp
+                            @if($proposalFile)
+                            <span class="badge bg-success">
+                                <i class="bx bx-check-circle"></i> Uploaded
+                            </span>
+                            @else
+                            <span class="badge bg-secondary">
+                                <i class="bx bx-x-circle"></i> Belum
+                            </span>
+                            @endif
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ $kegiatan->statusBadge }}">
+                                {{ ucfirst($kegiatan->status) }}
+                            </span>
+                        </td>
+                        <td>
+                            @if($kegiatan->current_approver_role === 'completed')
+                            <span class="badge bg-success">✓ Selesai</span>
+                            @elseif($kegiatan->current_approver_role)
+                            <span class="badge bg-warning">
+                                {{ match($kegiatan->current_approver_role) {
+                                    'pembina_hima' => 'Pembina Hima',
+                                    'kaprodi' => 'Kaprodi',
+                                    'wadek_iii' => 'Wadek III',
+                                    default => '-'
+                                } }}
+                            </span>
+                            @else
+                            <span class="badge bg-secondary">Belum Submit</span>
+                            @endif
+                        </td>
+                        <td>
+                            <a href="{{ route('kegiatan.proposal.show', $kegiatan) }}" class="btn btn-sm btn-info">
+                                <i class="bx bx-file"></i> Detail
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+        <div class="text-center py-5">
+            <i class="bx bx-file-blank bx-lg text-muted mb-3"></i>
+            <p class="text-muted">
+                @if(Auth::user()->isHima())
+                Belum ada proposal kegiatan. Upload proposal setelah usulan disetujui.
+                @else
+                Belum ada proposal kegiatan yang perlu di-review.
+                @endif
+            </p>
+        </div>
+        @endif
+    </div>
+</div>
+@endsection

@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('kegiatan_files', function (Blueprint $table) {
+            // Tambah file_type (opsional)
+            $table->string('file_type')->nullable()->after('file_size');
+
+            // Ubah uploaded_at jadi nullable dengan default now()
+            $table->timestamp('uploaded_at')->nullable()->useCurrent()->change();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('kegiatan_files', function (Blueprint $table) {
+            $table->dropColumn('file_type');
+
+            // Kembalikan uploaded_at ke state sebelumnya
+            $table->timestamp('uploaded_at')->nullable(false)->change();
+        });
+    }
+};

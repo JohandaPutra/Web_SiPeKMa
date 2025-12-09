@@ -1,0 +1,117 @@
+// DataTables
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+@import 'datatables.net-bs5/css/dataTables.bootstrap5.min.css';
+@import 'datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css';
+@import 'datatables.net-select-bs5/css/select.bootstrap5.css';
+
+$primary-color: #ff8157;
+
+// Sneat Theme Colors (diambil dari template)
+$success: #71dd37;
+$danger: #ff3e1d;
+$warning: #ffab00;
+$info: #03c3ec;
+$white: #fff;
+$dark: #2b2c40;
+$gray-200: rgba(#22303e, 0.12);
+
+// DataTable Custom Styling
+.dataTables_wrapper {
+  .dataTables_paginate {
+    .pagination {
+      margin-bottom: 0;
+
+      .page-link {
+        border: 1px solid #d1d5db;
+        color: #374151;
+        padding: 0.5rem 0.75rem;
+        margin: 0 2px;
+        border-radius: 6px;
+
+        &:hover {
+          background: $primary-color;
+          border-color: #9ca3af;
+        }
+
+        &:focus {
+          box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+      }
+
+      .page-item.active .page-link {
+        background: $primary-color;
+        border-color: $primary-color;
+        color: white;
+      }
+
+      .page-item.disabled .page-link {
+        color: #9ca3af;
+        background: #f9fafb;
+        border-color: #e5e7eb;
+      }
+    }
+  }
+}
+
+// Breadcrumb Styling
+.breadcrumb-style1 {
+  background: none;
+  padding: 0;
+  margin: 0;
+
+  .breadcrumb-item {
+    font-size: 0.875rem;
+
+    &:not(.active) a {
+      color: #6b7280;
+      text-decoration: none;
+
+      &:hover {
+        color: #374151;
+      }
+    }
+
+    &.active {
+      color: $primary-color;
+      font-weight: 500;
+    }
+
+    &::before {
+      content: '>';
+      color: #9ca3af;
+      margin: 0 0.5rem;
+    }
+
+    &:first-child::before {
+      content: none;
+    }
+  }
+}
+// Toast Styling
+.toast {
+  opacity: 1 !important;
+
+  &.bg-success {
+    background-color: $primary-color !important;
+    opacity: 1 !important;
+  }
+
+  &.bg-danger {
+    background-color: $danger !important;
+    opacity: 1 !important;
+  }
+
+  &.bg-warning {
+    background-color: $warning !important;
+    opacity: 1 !important;
+
+    .toast-body {
+      color: $dark !important;
+    }
+  }
+
+  &.bg-info {
+    background-color: $info !important;
+    opacity: 1 !important;
+  }
+}

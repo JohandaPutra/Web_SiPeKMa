@@ -1,0 +1,67 @@
+{
+  "menu": [
+    {
+      "url": "/",
+      "name": "Dashboards",
+      "icon": "menu-icon tf-icons bx bx-home-smile",
+      "slug": "dashboard-analytics"
+    },
+    {
+      "menuHeader": "Kegiatan"
+    },
+    {
+      "name": "Kegiatan",
+      "icon": "menu-icon tf-icons bx bx-layout",
+      "slug": "kegiatan",
+      "alwaysopen": true,
+      "submenu": [
+        {
+          "url": "kegiatan",
+          "name": "Usulan Kegiatan",
+          "slug": [
+            "kegiatan.index",
+            "kegiatan.create",
+            "kegiatan.show",
+            "kegiatan.edit"
+          ]
+        },
+        {
+          "url": "proposal",
+          "name": "Proposal Kegiatan",
+          "slug": [
+            "kegiatan.proposal.index",
+            "kegiatan.proposal.show",
+            "kegiatan.proposal.upload"
+          ]
+        },
+        {
+          "url": "pendanaan",
+          "name": "Pendanaan Kegiatan",
+          "slug": [
+            "kegiatan.pendanaan.index",
+            "kegiatan.pendanaan.show",
+            "kegiatan.pendanaan.upload"
+          ]
+        },
+        {
+          "url": "laporan",
+          "name": "Laporan Kegiatan",
+          "slug": [
+            "kegiatan.laporan.index",
+            "kegiatan.laporan.show",
+            "kegiatan.laporan.upload"
+          ]
+        }
+      ]
+    },
+    {
+      "menuHeader": "User Management"
+    },
+    {
+      "url": "users",
+      "name": "Users",
+      "icon": "menu-icon tf-icons bx bx-user",
+      "slug": "users-index"
+    }
+  ]
+}
