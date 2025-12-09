@@ -127,6 +127,10 @@ Route::resource('usulan-kegiatan', UsulanKegiatanController::class);
 use App\Http\Controllers\KegiatanController;
 
 Route::middleware(['role:hima,pembina_hima,kaprodi,wadek_iii'])->group(function () {
+    // Riwayat Kegiatan routes
+    Route::get('riwayat', [KegiatanController::class, 'riwayat'])->name('kegiatan.riwayat.index');
+    Route::get('riwayat/{kegiatan}', [KegiatanController::class, 'showRiwayat'])->name('kegiatan.riwayat.show');
+
     Route::resource('kegiatan', KegiatanController::class);
 
     // Additional routes untuk approval workflow

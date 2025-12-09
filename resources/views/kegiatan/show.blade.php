@@ -83,13 +83,17 @@
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i class="bx bx-history"></i> Riwayat Persetujuan
+                    <i class="bx bx-history"></i> Riwayat Persetujuan Usulan
                 </h5>
             </div>
             <div class="card-body">
-                @if($kegiatan->approvalHistories->count() > 0)
+                @php
+                    $usulanHistories = $kegiatan->approvalHistories->where('tahap', 'usulan');
+                @endphp
+                
+                @if($usulanHistories->count() > 0)
                 <div class="timeline">
-                    @foreach($kegiatan->approvalHistories->sortByDesc('approved_at') as $history)
+                    @foreach($usulanHistories->sortByDesc('approved_at') as $history)
                     <div class="timeline-item mb-4">
                         <div class="d-flex align-items-start">
                             <div class="timeline-indicator timeline-indicator-{{ $history->actionBadge }}">
@@ -119,7 +123,7 @@
                 @else
                 <div class="text-center text-muted py-4">
                     <i class="bx bx-info-circle bx-lg mb-2"></i>
-                    <p>Belum ada riwayat persetujuan</p>
+                    <p>Belum ada riwayat persetujuan usulan</p>
                 </div>
                 @endif
             </div>
@@ -134,30 +138,59 @@
                 <h5 class="card-title mb-0">Status Approval</h5>
             </div>
             <div class="card-body">
-                @if($kegiatan->current_approver_role === 'completed')
+                @php
+                // Cek apakah usulan sudah disetujui semua level (pindah ke tahap selanjutnya)
+                $usulanApprovals = $kegiatan->approvalHistories->where('tahap', 'usulan');
+                $usulanApprovedCount = $usulanApprovals->where('action', 'approved')->count();
+                $usulanCompleted = $usulanApprovedCount >= 3 || $kegiatan->tahap !== 'usulan';
+                $usulanRejected = $usulanApprovals->where('action', 'rejected')->count() > 0;
+                $usulanRejectedHistory = $usulanRejected ? $usulanApprovals->where('action', 'rejected')->first() : null;
+                $usulanRevision = $usulanApprovals->where('action', 'revision')->count() > 0 && 
+                                  $kegiatan->tahap === 'usulan' && 
+                                  $kegiatan->status === 'revision';
+                @endphp
+
+                @if($usulanCompleted && $kegiatan->tahap !== 'usulan')
                 <div class="alert alert-success">
                     <i class="bx bx-check-circle me-2"></i>
                     <strong>Usulan Disetujui!</strong>
-                    <p class="mb-0 mt-2">Semua tahap persetujuan telah selesai.</p>
+                    <p class="mb-0 mt-2">Semua tahap persetujuan usulan telah selesai. Kegiatan telah masuk tahap {{ ucfirst($kegiatan->tahap) }}.</p>
                 </div>
-                @elseif($kegiatan->status === 'rejected')
+                @elseif($kegiatan->current_approver_role === 'completed' && $kegiatan->tahap === 'usulan')
+                <div class="alert alert-success">
+                    <i class="bx bx-check-circle me-2"></i>
+                    <strong>Usulan Disetujui!</strong>
+                    <p class="mb-0 mt-2">Semua tahap persetujuan usulan telah selesai.</p>
+                </div>
+                @elseif($usulanRejected)
                 <div class="alert alert-danger">
                     <i class="bx bx-x-circle me-2"></i>
                     <strong>Usulan Ditolak</strong>
+                    @if($usulanRejectedHistory)
+                    <p class="mb-0 mt-2">
+                        Ditolak oleh <strong>{{ $usulanRejectedHistory->approver->role->display_name }}</strong>
+                        pada {{ $usulanRejectedHistory->approved_at->format('d M Y H:i') }}
+                    </p>
+                    @if($usulanRejectedHistory->comment)
+                    <div class="alert alert-light mt-2 mb-0">
+                        <small><strong>Alasan:</strong> {{ $usulanRejectedHistory->comment }}</small>
+                    </div>
+                    @endif
+                    @endif
                 </div>
-                @elseif($kegiatan->status === 'revision')
+                @elseif($usulanRevision)
                 <div class="alert alert-warning">
                     <i class="bx bx-error me-2"></i>
                     <strong>Perlu Revisi</strong>
                     <p class="mb-0 mt-2">Silakan cek komentar dan perbaiki usulan.</p>
                 </div>
-                @elseif($kegiatan->status === 'draft')
+                @elseif($kegiatan->status === 'draft' && $kegiatan->tahap === 'usulan')
                 <div class="alert alert-secondary">
                     <i class="bx bx-info-circle me-2"></i>
                     <strong>Draft</strong>
                     <p class="mb-0 mt-2">Usulan belum disubmit.</p>
                 </div>
-                @else
+                @elseif($kegiatan->status === 'submitted' && $kegiatan->tahap === 'usulan')
                 <div class="alert alert-info">
                     <i class="bx bx-time me-2"></i>
                     <strong>Menunggu Persetujuan</strong>
@@ -170,31 +203,45 @@
                         } }}
                     </p>
                 </div>
+                @else
+                <div class="alert alert-info">
+                    <i class="bx bx-time me-2"></i>
+                    <strong>Sedang Diproses</strong>
+                    <p class="mb-0 mt-2">Usulan sedang dalam proses persetujuan.</p>
+                </div>
                 @endif
 
                 <!-- Progress Bar -->
                 <div class="mt-3">
-                    <label class="form-label mb-2">Progress Approval:</label>
+                    <label class="form-label mb-2">Progress Approval Usulan:</label>
                     @php
-                    $progress = 0;
-                    if ($kegiatan->current_approver_role === 'completed') {
-                        $progress = 100;
-                    } elseif ($kegiatan->current_approver_role === 'wadek_iii') {
-                        $progress = 66;
-                    } elseif ($kegiatan->current_approver_role === 'kaprodi') {
-                        $progress = 33;
-                    } elseif ($kegiatan->current_approver_role === 'pembina_hima') {
-                        $progress = 10;
+                    // Hitung progress berdasarkan approval yang sudah ada untuk tahap usulan
+                    $usulanApprovals = $kegiatan->approvalHistories->where('tahap', 'usulan')->where('action', 'approved');
+                    $approvedCount = $usulanApprovals->count();
+                    
+                    if ($approvedCount >= 3 || $kegiatan->tahap !== 'usulan') {
+                        $progress = 100; // Semua approval selesai atau sudah pindah tahap
+                    } elseif ($approvedCount == 2) {
+                        $progress = 66; // Pembina + Kaprodi approved, menunggu Wadek
+                    } elseif ($approvedCount == 1) {
+                        $progress = 33; // Pembina approved, menunggu Kaprodi
+                    } elseif ($kegiatan->status === 'submitted') {
+                        $progress = 10; // Sudah submit, menunggu Pembina
+                    } else {
+                        $progress = 0; // Draft
                     }
                     @endphp
                     <div class="progress">
-                        <div class="progress-bar" role="progressbar" style="width: {{ $progress }}%"
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ $progress }}%"
                              aria-valuenow="{{ $progress }}" aria-valuemin="0" aria-valuemax="100">
                             {{ $progress }}%
                         </div>
                     </div>
                     <small class="text-muted mt-2 d-block">
                         Pembina → Kaprodi → Wadek III
+                        @if($approvedCount > 0)
+                        ({{ $approvedCount }}/3 Approved)
+                        @endif
                     </small>
                 </div>
             </div>
@@ -207,9 +254,17 @@
                 <h5 class="card-title mb-0">Aksi</h5>
             </div>
             <div class="card-body">
+                @php
+                // Hitung approval count untuk cek status usulan
+                $usulanApprovedHistories = $kegiatan->approvalHistories->where('tahap', 'usulan')->where('action', 'approved');
+                $approvedCount = $usulanApprovedHistories->count();
+                // Cek apakah usulan sudah selesai (ada approval atau sudah pindah tahap)
+                $usulanSelesai = $approvedCount >= 3 || $kegiatan->tahap !== 'usulan';
+                @endphp
+
                 <!-- Info dan tombol jika usulan sudah pindah ke tahap proposal -->
                 @if($kegiatan->tahap === 'proposal')
-                <div class="alert alert-success mb-2">
+                <div class="alert alert-success mb-3">
                     <strong><i class="bx bx-check-circle me-1"></i> Usulan Disetujui!</strong>
                     <p class="mb-2 small">Kegiatan telah masuk tahap proposal. Silakan lihat detail proposal.</p>
                     <a href="{{ route('kegiatan.proposal.show', $kegiatan) }}" class="btn btn-sm btn-success">
@@ -218,7 +273,11 @@
                 </div>
                 @endif
 
+                <!-- Tombol untuk status draft atau revision -->
                 @if($kegiatan->tahap === 'usulan' && in_array($kegiatan->status, ['draft', 'revision']))
+                <a href="{{ route('kegiatan.edit', $kegiatan) }}" class="btn btn-primary w-100 mb-2">
+                    <i class="bx bx-edit me-1"></i> Edit Usulan
+                </a>
                 <form action="{{ route('kegiatan.submit', $kegiatan) }}" method="POST" class="mb-2">
                     @csrf
                     <button type="submit" class="btn btn-success w-100"
@@ -226,12 +285,10 @@
                         <i class="bx bx-send me-1"></i> Submit Usulan
                     </button>
                 </form>
-                <a href="{{ route('kegiatan.edit', $kegiatan) }}" class="btn btn-primary w-100 mb-2">
-                    <i class="bx bx-edit me-1"></i> Edit Usulan
-                </a>
                 @endif
 
-                @if($kegiatan->status === 'draft')
+                <!-- Tombol hapus hanya untuk draft yang belum selesai -->
+                @if($kegiatan->status === 'draft' && $kegiatan->tahap === 'usulan' && !$usulanSelesai)
                 <form action="{{ route('kegiatan.destroy', $kegiatan) }}" method="POST" class="mb-2">
                     @csrf
                     @method('DELETE')

@@ -12,6 +12,90 @@ use Illuminate\Support\Facades\Storage;
 class KegiatanController extends Controller
 {
     /**
+     * Display riwayat kegiatan (all stages).
+     */
+    public function riwayat()
+    {
+        $user = Auth::user();
+
+        // Tampilkan semua kegiatan dengan semua tahap
+        if ($user->isHima()) {
+            // Hima melihat semua kegiatan yang dia buat
+            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
+                ->where('user_id', $user->id)
+                ->latest()
+                ->get();
+        } elseif ($user->isPembina()) {
+            // Pembina melihat semua kegiatan di prodinya
+            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
+                ->where('prodi_id', $user->prodi_id)
+                ->latest()
+                ->get();
+        } elseif ($user->isKaprodi()) {
+            // Kaprodi melihat kegiatan yang sudah pernah masuk ke level mereka
+            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
+                ->where('prodi_id', $user->prodi_id)
+                ->where(function($query) {
+                    // Sudah pernah diapprove pembina (masuk ke kaprodi)
+                    $query->whereHas('approvalHistories', function($q) {
+                        $q->where('approver_role', 'pembina_hima')->where('status', 'approved');
+                    })
+                    // Atau sedang/pernah di tahap yang lebih tinggi
+                    ->orWhereIn('tahap', ['proposal', 'pendanaan', 'laporan']);
+                })
+                ->latest()
+                ->get();
+        } elseif ($user->isWadek()) {
+            // Wadek melihat semua kegiatan yang sudah pernah masuk ke level mereka
+            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
+                ->where(function($query) {
+                    // Sudah pernah diapprove kaprodi (masuk ke wadek)
+                    $query->whereHas('approvalHistories', function($q) {
+                        $q->where('approver_role', 'kaprodi')->where('status', 'approved');
+                    })
+                    // Atau sedang/pernah di tahap yang lebih tinggi
+                    ->orWhereIn('tahap', ['proposal', 'pendanaan', 'laporan']);
+                })
+                ->latest()
+                ->get();
+        } else {
+            $kegiatans = collect();
+        }
+
+        return view('kegiatan.riwayat.index', compact('kegiatans'));
+    }
+
+    /**
+     * Display detail riwayat kegiatan.
+     */
+    public function showRiwayat(Kegiatan $kegiatan)
+    {
+        $user = Auth::user();
+
+        // Validasi akses
+        if ($user->isHima() && $kegiatan->user_id !== $user->id) {
+            abort(403, 'Unauthorized');
+        }
+        
+        if (($user->isPembina() || $user->isKaprodi()) && $kegiatan->prodi_id !== $user->prodi_id) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Load semua relasi
+        $kegiatan->load(['user', 'prodi', 'approvalHistories.approver', 'files']);
+
+        // Group approval histories by tahap
+        $approvalsByTahap = $kegiatan->approvalHistories->groupBy('tahap');
+
+        // Get files by type
+        $proposalFile = $kegiatan->files->where('file_type', 'proposal')->first();
+        $rabFile = $kegiatan->files->where('file_type', 'rab')->first();
+        $laporanFile = $kegiatan->files->where('file_type', 'laporan')->first();
+
+        return view('kegiatan.riwayat.show', compact('kegiatan', 'approvalsByTahap', 'proposalFile', 'rabFile', 'laporanFile'));
+    }
+
+    /**
      * Display a listing of the resource (Usulan only).
      */
     public function index()
@@ -793,7 +877,9 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        if ($kegiatan->tahap !== 'pendanaan') {
+        // Cek apakah kegiatan sudah pernah sampai tahap pendanaan
+        $validTahap = in_array($kegiatan->tahap, ['pendanaan', 'laporan']);
+        if (!$validTahap) {
             return redirect()->route('kegiatan.pendanaan.index')
                 ->with('error', 'Kegiatan ini belum masuk tahap pendanaan.');
         }
