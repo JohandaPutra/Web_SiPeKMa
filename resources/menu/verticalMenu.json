@@ -16,10 +16,10 @@
       "alwaysopen": true,
       "submenu": [
         {
-          "url": "riwayat",
+          "url": "kegiatan/riwayat",
           "name": "Riwayat Kegiatan",
           "slug": [
-            "kegiatan.riwayat.index",
+            "kegiatan.riwayat",
             "kegiatan.riwayat.show"
           ]
         },

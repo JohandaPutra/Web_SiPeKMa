@@ -12,87 +12,142 @@ class Analytics extends Controller
   public function index()
   {
     $user = Auth::user();
-    
+
     // Hitung data berdasarkan role
     if ($user->isHima()) {
-      // Hima hanya melihat usulan miliknya
+      // Hima hanya melihat usulan miliknya (exclude rejected)
       $totalUsulan = Kegiatan::where('user_id', $user->id)
         ->where('tahap', 'usulan')
+        ->where('status', '!=', 'rejected')
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
+        })
         ->count();
       $proposalDisetujui = Kegiatan::where('user_id', $user->id)
         ->where('tahap', 'proposal')
+        ->where('status', '!=', 'rejected')
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
+        })
         ->count();
       $pendanaan = Kegiatan::where('user_id', $user->id)
         ->where('tahap', 'pendanaan')
+        ->where('status', '!=', 'rejected')
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
+        })
         ->count();
       $laporan = Kegiatan::where('user_id', $user->id)
         ->where('tahap', 'laporan')
+        ->where('status', '!=', 'rejected')
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
+        })
         ->count();
     } elseif ($user->role->name === 'pembina_hima') {
-      // Pembina melihat usulan yang sudah disubmit di prodinya (tidak termasuk draft)
+      // Pembina melihat usulan yang sudah disubmit di prodinya (exclude draft dan rejected)
       $totalUsulan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'usulan')
         ->whereIn('status', ['submitted', 'revision'])
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
+        })
         ->count();
       $proposalDisetujui = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'proposal')
+        ->where('status', '!=', 'rejected')
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
+        })
         ->count();
       $pendanaan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'pendanaan')
+        ->where('status', '!=', 'rejected')
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
+        })
         ->count();
       $laporan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'laporan')
+        ->where('status', '!=', 'rejected')
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
+        })
         ->count();
     } elseif ($user->role->name === 'kaprodi') {
-      // Kaprodi melihat usulan yang sudah disetujui pembina di prodinya
+      // Kaprodi melihat usulan yang sudah disetujui pembina di prodinya (exclude rejected)
       $totalUsulan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'usulan')
         ->whereHas('approvalHistories', function($q) {
-          $q->where('approver_role', 'pembina_hima')->where('status', 'approved');
+          $q->where('approver_role', 'pembina_hima')->where('tahap', 'usulan')->where('action', 'approved');
+        })
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
         })
         ->count();
       $proposalDisetujui = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'proposal')
         ->whereHas('approvalHistories', function($q) {
-          $q->where('approver_role', 'pembina_hima')->where('status', 'approved');
+          $q->where('approver_role', 'pembina_hima')->where('tahap', 'proposal')->where('action', 'approved');
+        })
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
         })
         ->count();
       $pendanaan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'pendanaan')
         ->whereHas('approvalHistories', function($q) {
-          $q->where('approver_role', 'kaprodi')->where('status', 'approved');
+          $q->where('approver_role', 'kaprodi')->where('tahap', 'pendanaan')->where('action', 'approved');
+        })
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
         })
         ->count();
       $laporan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'laporan')
         ->whereHas('approvalHistories', function($q) {
-          $q->where('approver_role', 'kaprodi')->where('status', 'approved');
+          $q->where('approver_role', 'kaprodi')->where('tahap', 'laporan')->where('action', 'approved');
+        })
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
         })
         ->count();
     } else {
-      // Wadek melihat semua usulan yang sudah disetujui kaprodi
+      // Wadek melihat semua usulan yang sudah disetujui kaprodi (exclude rejected)
       $totalUsulan = Kegiatan::where('tahap', 'usulan')
         ->whereHas('approvalHistories', function($q) {
-          $q->where('approver_role', 'kaprodi')->where('status', 'approved');
+          $q->where('approver_role', 'kaprodi')->where('tahap', 'usulan')->where('action', 'approved');
+        })
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
         })
         ->count();
       $proposalDisetujui = Kegiatan::where('tahap', 'proposal')
         ->whereHas('approvalHistories', function($q) {
-          $q->where('approver_role', 'kaprodi')->where('status', 'approved');
+          $q->where('approver_role', 'kaprodi')->where('tahap', 'proposal')->where('action', 'approved');
+        })
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
         })
         ->count();
       $pendanaan = Kegiatan::where('tahap', 'pendanaan')
         ->whereHas('approvalHistories', function($q) {
-          $q->where('approver_role', 'wadek_iii')->where('status', 'approved');
+          $q->where('approver_role', 'wadek_iii')->where('tahap', 'pendanaan')->where('action', 'approved');
+        })
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
         })
         ->count();
       $laporan = Kegiatan::where('tahap', 'laporan')
         ->whereHas('approvalHistories', function($q) {
-          $q->where('approver_role', 'wadek_iii')->where('status', 'approved');
+          $q->where('approver_role', 'wadek_iii')->where('tahap', 'laporan')->where('action', 'approved');
+        })
+        ->whereDoesntHave('approvalHistories', function($q) {
+          $q->where('action', 'rejected');
         })
         ->count();
     }
-    
+
     return view('content.dashboard.dashboards-analytics', compact(
       'totalUsulan',
       'proposalDisetujui',

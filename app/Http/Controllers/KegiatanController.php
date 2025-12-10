@@ -18,51 +18,53 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Tampilkan semua kegiatan dengan semua tahap
-        if ($user->isHima()) {
-            // Hima melihat semua kegiatan yang dia buat
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('user_id', $user->id)
-                ->latest()
-                ->get();
-        } elseif ($user->isPembina()) {
-            // Pembina melihat semua kegiatan di prodinya
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('prodi_id', $user->prodi_id)
-                ->latest()
-                ->get();
-        } elseif ($user->isKaprodi()) {
-            // Kaprodi melihat kegiatan yang sudah pernah masuk ke level mereka
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('prodi_id', $user->prodi_id)
-                ->where(function($query) {
-                    // Sudah pernah diapprove pembina (masuk ke kaprodi)
-                    $query->whereHas('approvalHistories', function($q) {
-                        $q->where('approver_role', 'pembina_hima')->where('status', 'approved');
-                    })
-                    // Atau sedang/pernah di tahap yang lebih tinggi
-                    ->orWhereIn('tahap', ['proposal', 'pendanaan', 'laporan']);
-                })
-                ->latest()
-                ->get();
+        // Base query dengan eager loading
+        $query = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files']);
+
+        // Filter berdasarkan role
+        if ($user->isHima() || $user->isPembina() || $user->isKaprodi()) {
+            // Hima, Pembina, dan Kaprodi melihat semua kegiatan di prodi mereka
+            $query->where('prodi_id', $user->prodi_id);
         } elseif ($user->isWadek()) {
-            // Wadek melihat semua kegiatan yang sudah pernah masuk ke level mereka
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where(function($query) {
-                    // Sudah pernah diapprove kaprodi (masuk ke wadek)
-                    $query->whereHas('approvalHistories', function($q) {
-                        $q->where('approver_role', 'kaprodi')->where('status', 'approved');
-                    })
-                    // Atau sedang/pernah di tahap yang lebih tinggi
-                    ->orWhereIn('tahap', ['proposal', 'pendanaan', 'laporan']);
-                })
-                ->latest()
-                ->get();
+            // Wadek III melihat semua kegiatan dari semua prodi
+            // Tidak ada filter prodi_id
         } else {
             $kegiatans = collect();
+            $prodis = collect();
+            return view('kegiatan.riwayat.index', compact('kegiatans', 'prodis'));
         }
 
-        return view('kegiatan.riwayat.index', compact('kegiatans'));
+        // Filter berdasarkan request
+        if (request('search')) {
+            $query->where('nama_kegiatan', 'like', '%' . request('search') . '%');
+        }
+
+        if (request('prodi_id')) {
+            $query->where('prodi_id', request('prodi_id'));
+        }
+
+        if (request('tahap')) {
+            $query->where('tahap', request('tahap'));
+        }
+
+        // Urutkan berdasarkan terbaru
+        $query->latest();
+
+        // Handle pagination
+        $perPage = request('per_page', 10);
+        if ($perPage === 'all') {
+            $kegiatans = $query->get();
+        } else {
+            $kegiatans = $query->paginate((int)$perPage)->appends(request()->query());
+        }
+
+        // Ambil list prodi untuk filter (hanya untuk Wadek III)
+        $prodis = collect();
+        if ($user->isWadek()) {
+            $prodis = \App\Models\Prodi::orderBy('nama_prodi')->get();
+        }
+
+        return view('kegiatan.riwayat.index', compact('kegiatans', 'prodis'));
     }
 
     /**
@@ -72,14 +74,13 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Validasi akses
-        if ($user->isHima() && $kegiatan->user_id !== $user->id) {
-            abort(403, 'Unauthorized');
+        // Validasi akses - Hima, Pembina, Kaprodi hanya bisa lihat kegiatan di prodi mereka
+        if ($user->isHima() || $user->isPembina() || $user->isKaprodi()) {
+            if ($kegiatan->prodi_id !== $user->prodi_id) {
+                abort(403, 'Unauthorized');
+            }
         }
-        
-        if (($user->isPembina() || $user->isKaprodi()) && $kegiatan->prodi_id !== $user->prodi_id) {
-            abort(403, 'Unauthorized');
-        }
+        // Wadek III bisa lihat semua
 
         // Load semua relasi
         $kegiatan->load(['user', 'prodi', 'approvalHistories.approver', 'files']);
@@ -102,43 +103,51 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
+        // Base query - exclude rejected kegiatan
+        $query = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver'])
+            ->where('tahap', 'usulan')
+            ->where('status', '!=', 'rejected')
+            ->whereDoesntHave('approvalHistories', function($q) {
+                $q->where('action', 'rejected');
+            });
+
         // Filter kegiatan tahap usulan saja
         if ($user->isHima()) {
             // Hima melihat usulan yang dia buat (semua status)
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver'])
-                ->where('user_id', $user->id)
-                ->where('tahap', 'usulan')
-                ->latest()
-                ->get();
+            $query->where('user_id', $user->id);
         } elseif ($user->isPembina()) {
             // Pembina melihat usulan prodi mereka yang sudah disubmit (tidak termasuk draft)
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver'])
-                ->where('prodi_id', $user->prodi_id)
-                ->where('tahap', 'usulan')
-                ->whereIn('status', ['submitted', 'revision'])
-                ->latest()
-                ->get();
+            $query->where('prodi_id', $user->prodi_id)
+                ->whereIn('status', ['submitted', 'revision']);
         } elseif ($user->isKaprodi()) {
             // Kaprodi melihat usulan prodi mereka yang sudah disetujui pembina
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver'])
-                ->where('prodi_id', $user->prodi_id)
-                ->where('tahap', 'usulan')
+            $query->where('prodi_id', $user->prodi_id)
                 ->whereHas('approvalHistories', function($q) {
-                    $q->where('approver_role', 'pembina_hima')->where('status', 'approved');
-                })
-                ->latest()
-                ->get();
+                    $q->where('approver_role', 'pembina_hima')
+                      ->where('tahap', 'usulan')
+                      ->where('action', 'approved');
+                });
         } elseif ($user->isWadek()) {
             // Wadek melihat usulan yang sudah disetujui kaprodi
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver'])
-                ->where('tahap', 'usulan')
-                ->whereHas('approvalHistories', function($q) {
-                    $q->where('approver_role', 'kaprodi')->where('status', 'approved');
-                })
-                ->latest()
-                ->get();
+            $query->whereHas('approvalHistories', function($q) {
+                $q->where('approver_role', 'kaprodi')
+                  ->where('tahap', 'usulan')
+                  ->where('action', 'approved');
+            });
         } else {
             $kegiatans = collect();
+            return view('kegiatan.index', compact('kegiatans'));
+        }
+
+        // Apply ordering
+        $query->latest();
+
+        // Handle pagination
+        $perPage = request('per_page', 10);
+        if ($perPage === 'all') {
+            $kegiatans = $query->get();
+        } else {
+            $kegiatans = $query->paginate((int)$perPage)->appends(request()->query());
         }
 
         return view('kegiatan.index', compact('kegiatans'));
@@ -151,45 +160,49 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
+        // Base query - exclude rejected kegiatan
+        $query = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
+            ->where('tahap', 'proposal')
+            ->where('status', '!=', 'rejected')
+            ->whereDoesntHave('approvalHistories', function($q) {
+                $q->where('action', 'rejected');
+            });
+
         // Filter kegiatan tahap proposal berdasarkan role dan visibility
         if ($user->isHima()) {
             // Hima melihat semua proposal yang dia buat
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('user_id', $user->id)
-                ->where('tahap', 'proposal')
-                ->latest()
-                ->get();
+            $query->where('user_id', $user->id);
         } elseif ($user->isPembina()) {
             // Pembina melihat semua proposal prodi mereka (termasuk draft untuk progress)
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('prodi_id', $user->prodi_id)
-                ->where('tahap', 'proposal')
-                ->latest()
-                ->get();
+            $query->where('prodi_id', $user->prodi_id);
         } elseif ($user->isKaprodi()) {
             // Kaprodi hanya melihat proposal yang sudah disetujui Pembina
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('prodi_id', $user->prodi_id)
-                ->where('tahap', 'proposal')
+            $query->where('prodi_id', $user->prodi_id)
                 ->where(function($query) {
                     $query->where('current_approver_role', 'kaprodi')
                           ->orWhere('current_approver_role', 'wadek_iii')
                           ->orWhere('current_approver_role', 'completed');
-                })
-                ->latest()
-                ->get();
+                });
         } elseif ($user->isWadek()) {
             // Wadek hanya melihat proposal yang sudah disetujui Kaprodi
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('tahap', 'proposal')
-                ->where(function($query) {
-                    $query->where('current_approver_role', 'wadek_iii')
-                          ->orWhere('current_approver_role', 'completed');
-                })
-                ->latest()
-                ->get();
+            $query->where(function($query) {
+                $query->where('current_approver_role', 'wadek_iii')
+                      ->orWhere('current_approver_role', 'completed');
+            });
         } else {
             $kegiatans = collect();
+            return view('kegiatan.proposal.index', compact('kegiatans'));
+        }
+
+        // Apply ordering
+        $query->latest();
+
+        // Handle pagination
+        $perPage = request('per_page', 10);
+        if ($perPage === 'all') {
+            $kegiatans = $query->get();
+        } else {
+            $kegiatans = $query->paginate((int)$perPage)->appends(request()->query());
         }
 
         return view('kegiatan.proposal.index', compact('kegiatans'));
@@ -516,14 +529,15 @@ class KegiatanController extends Controller
                 };
                 return redirect()->route($redirectTahap)->with('success', $message);
             } else {
-                // Pembina/Kaprodi tetap ke show page
-                if ($kegiatan->tahap === 'proposal') {
-                    return redirect()->route('kegiatan.proposal.show', $kegiatan)->with('success', $message);
-                } elseif ($kegiatan->tahap === 'pendanaan') {
-                    return redirect()->route('kegiatan.pendanaan.show', $kegiatan)->with('success', $message);
-                } else {
-                    return redirect()->route('kegiatan.show', $kegiatan)->with('success', $message);
-                }
+                // Pembina/Kaprodi/Wadek tetap ke show page sesuai tahap
+                $redirectRoute = match($kegiatan->tahap) {
+                    'usulan' => 'kegiatan.show',
+                    'proposal' => 'kegiatan.proposal.show',
+                    'pendanaan' => 'kegiatan.pendanaan.show',
+                    'laporan' => 'kegiatan.laporan.show',
+                    default => 'kegiatan.show',
+                };
+                return redirect()->route($redirectRoute, $kegiatan)->with('success', $message);
             }
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menyetujui kegiatan: ' . $e->getMessage());
@@ -570,7 +584,16 @@ class KegiatanController extends Controller
                 'status' => 'revision',
             ]);
 
-            return redirect()->route('kegiatan.show', $kegiatan)
+            // Redirect ke halaman sesuai tahap kegiatan
+            $redirectRoute = match($kegiatan->tahap) {
+                'usulan' => 'kegiatan.show',
+                'proposal' => 'kegiatan.proposal.show',
+                'pendanaan' => 'kegiatan.pendanaan.show',
+                'laporan' => 'kegiatan.laporan.show',
+                default => 'kegiatan.show',
+            };
+
+            return redirect()->route($redirectRoute, $kegiatan)
                 ->with('success', 'Permintaan revisi berhasil dikirim ke Hima.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal meminta revisi: ' . $e->getMessage());
@@ -616,8 +639,17 @@ class KegiatanController extends Controller
                 'status' => 'rejected',
             ]);
 
-            return redirect()->route('kegiatan.show', $kegiatan)
-                ->with('success', 'Usulan kegiatan telah ditolak.');
+            // Redirect ke halaman sesuai tahap kegiatan
+            $redirectRoute = match($kegiatan->tahap) {
+                'usulan' => 'kegiatan.show',
+                'proposal' => 'kegiatan.proposal.show',
+                'pendanaan' => 'kegiatan.pendanaan.show',
+                'laporan' => 'kegiatan.laporan.show',
+                default => 'kegiatan.show',
+            };
+
+            return redirect()->route($redirectRoute, $kegiatan)
+                ->with('success', 'Kegiatan telah ditolak.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menolak kegiatan: ' . $e->getMessage());
         }
@@ -833,38 +865,42 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
+        // Base query - exclude rejected kegiatan
+        $query = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
+            ->where('tahap', 'pendanaan')
+            ->where('status', '!=', 'rejected')
+            ->whereDoesntHave('approvalHistories', function($q) {
+                $q->where('action', 'rejected');
+            });
+
         // Filter kegiatan tahap pendanaan dengan progressive visibility
         if ($user->isHima()) {
             // Hima melihat semua pendanaan yang dia buat
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('user_id', $user->id)
-                ->where('tahap', 'pendanaan')
-                ->latest()
-                ->get();
+            $query->where('user_id', $user->id);
         } elseif ($user->isPembina()) {
             // Pembina melihat semua pendanaan di prodi mereka (monitoring)
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('prodi_id', $user->prodi_id)
-                ->where('tahap', 'pendanaan')
-                ->latest()
-                ->get();
+            $query->where('prodi_id', $user->prodi_id);
         } elseif ($user->isKaprodi()) {
             // Kaprodi melihat pendanaan yang sudah di-approve pembina (current_approver_role IN kaprodi, wadek_iii, completed)
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('prodi_id', $user->prodi_id)
-                ->where('tahap', 'pendanaan')
-                ->whereIn('current_approver_role', ['kaprodi', 'wadek_iii', 'completed'])
-                ->latest()
-                ->get();
+            $query->where('prodi_id', $user->prodi_id)
+                ->whereIn('current_approver_role', ['kaprodi', 'wadek_iii', 'completed']);
         } elseif ($user->isWadek()) {
             // Wadek melihat pendanaan yang sudah di-approve kaprodi (current_approver_role IN wadek_iii, completed)
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('tahap', 'pendanaan')
-                ->whereIn('current_approver_role', ['wadek_iii', 'completed'])
-                ->latest()
-                ->get();
+            $query->whereIn('current_approver_role', ['wadek_iii', 'completed']);
         } else {
             $kegiatans = collect();
+            return view('kegiatan.pendanaan.index', compact('kegiatans'));
+        }
+
+        // Apply ordering
+        $query->latest();
+
+        // Handle pagination
+        $perPage = request('per_page', 10);
+        if ($perPage === 'all') {
+            $kegiatans = $query->get();
+        } else {
+            $kegiatans = $query->paginate((int)$perPage)->appends(request()->query());
         }
 
         return view('kegiatan.pendanaan.index', compact('kegiatans'));
@@ -1109,45 +1145,49 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
+        // Base query - exclude rejected kegiatan
+        $query = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
+            ->where('tahap', 'laporan')
+            ->where('status', '!=', 'rejected')
+            ->whereDoesntHave('approvalHistories', function($q) {
+                $q->where('action', 'rejected');
+            });
+
         // Filter kegiatan tahap laporan berdasarkan role dan visibility
         if ($user->isHima()) {
             // Hima melihat semua laporan yang dia buat
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('user_id', $user->id)
-                ->where('tahap', 'laporan')
-                ->latest()
-                ->get();
+            $query->where('user_id', $user->id);
         } elseif ($user->isPembina()) {
             // Pembina melihat semua laporan prodi mereka
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('prodi_id', $user->prodi_id)
-                ->where('tahap', 'laporan')
-                ->latest()
-                ->get();
+            $query->where('prodi_id', $user->prodi_id);
         } elseif ($user->isKaprodi()) {
             // Kaprodi hanya melihat laporan yang sudah disetujui Pembina
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('prodi_id', $user->prodi_id)
-                ->where('tahap', 'laporan')
+            $query->where('prodi_id', $user->prodi_id)
                 ->where(function($query) {
                     $query->where('current_approver_role', 'kaprodi')
                           ->orWhere('current_approver_role', 'wadek_iii')
                           ->orWhere('current_approver_role', 'completed');
-                })
-                ->latest()
-                ->get();
+                });
         } elseif ($user->isWadek()) {
             // Wadek hanya melihat laporan yang sudah disetujui Kaprodi
-            $kegiatans = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
-                ->where('tahap', 'laporan')
-                ->where(function($query) {
-                    $query->where('current_approver_role', 'wadek_iii')
-                          ->orWhere('current_approver_role', 'completed');
-                })
-                ->latest()
-                ->get();
+            $query->where(function($query) {
+                $query->where('current_approver_role', 'wadek_iii')
+                      ->orWhere('current_approver_role', 'completed');
+            });
         } else {
             $kegiatans = collect();
+            return view('kegiatan.laporan.index', compact('kegiatans'));
+        }
+
+        // Apply ordering
+        $query->latest();
+
+        // Handle pagination
+        $perPage = request('per_page', 10);
+        if ($perPage === 'all') {
+            $kegiatans = $query->get();
+        } else {
+            $kegiatans = $query->paginate((int)$perPage)->appends(request()->query());
         }
 
         return view('kegiatan.laporan.index', compact('kegiatans'));

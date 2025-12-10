@@ -39,38 +39,39 @@
             </div>
             <div class="card-body">
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Nama Kegiatan:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->nama_kegiatan }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Nama Kegiatan:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->nama_kegiatan }}</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Jenis Kegiatan:</strong></div>
-                    <div class="col-sm-8">
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Kegiatan:</strong></div>
+                    <div class="col-12 col-sm-8">
                         <span class="badge bg-label-info">{{ ucfirst($kegiatan->jenis_kegiatan) }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Deskripsi:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->deskripsi_kegiatan }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Deskripsi:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->deskripsi_kegiatan }}</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Tempat:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->tempat_kegiatan }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Tempat:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->tempat_kegiatan }}</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Tanggal:</strong></div>
-                    <div class="col-sm-8">
-                        {{ $kegiatan->tanggal_mulai->format('d M Y') }} s/d {{ $kegiatan->tanggal_akhir->format('d M Y') }}
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Tanggal:</strong></div>
+                    <div class="col-12 col-sm-8">
+                        <span class="d-block d-sm-inline">{{ $kegiatan->tanggal_mulai->format('d M Y') }}</span>
+                        <span class="d-block d-sm-inline">s/d {{ $kegiatan->tanggal_akhir->format('d M Y') }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Jenis Pendanaan:</strong></div>
-                    <div class="col-sm-8">
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Pendanaan:</strong></div>
+                    <div class="col-12 col-sm-8">
                         <span class="badge bg-label-primary">{{ ucfirst($kegiatan->jenis_pendanaan) }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Prodi:</strong></div>
-                    <div class="col-sm-8">
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Prodi:</strong></div>
+                    <div class="col-12 col-sm-8">
                         <span class="badge bg-label-secondary">{{ $kegiatan->prodi->nama_prodi }}</span>
                     </div>
                 </div>
@@ -86,16 +87,16 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="flex-shrink-0">
+                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center mb-3">
+                    <div class="flex-shrink-0 mb-2 mb-sm-0">
                         <span class="badge bg-danger p-3">
                             <i class="bx bx-file-blank" style="font-size: 1.5rem;"></i>
                         </span>
                     </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1">{{ $proposalFile->file_name }}</h6>
+                    <div class="flex-grow-1 ms-sm-3">
+                        <h6 class="mb-1 text-break">{{ $proposalFile->file_name }}</h6>
                         <div class="text-muted small">
-                            <span class="me-3">
+                            <span class="me-3 d-block d-sm-inline mb-1 mb-sm-0">
                                 <i class="bx bx-calendar me-1"></i>
                                 {{ $proposalFile->uploaded_at->format('d M Y H:i') }}
                             </span>
@@ -161,10 +162,7 @@
                             </div>
                             <div class="ms-3 flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <div>
-                                        <h6 class="mb-0">{{ $history->approver->role->display_name }}</h6>
-                                        <small class="text-muted">{{ $history->approver->username }}</small>
-                                    </div>
+                                    <h6 class="mb-0">{{ $history->approver->role->display_name }}</h6>
                                     <small class="text-muted">{{ $history->approved_at->format('d M Y H:i') }}</small>
                                 </div>
                                 <span class="badge bg-{{ $history->actionBadge }} mb-2">
@@ -353,6 +351,7 @@
                     @endif
 
                     @if($proposalFile && in_array($kegiatan->status, ['draft', 'revision']))
+                    <!-- Submit Button -->
                     <form action="{{ route('kegiatan.proposal.submit', $kegiatan) }}" method="POST" class="mb-2">
                         @csrf
                         <button type="submit" class="btn btn-success w-100"
@@ -361,21 +360,22 @@
                         </button>
                     </form>
 
-                    <!-- Edit Proposal -->
-                    <a href="{{ route('kegiatan.proposal.upload', $kegiatan) }}" class="btn btn-warning w-100 mb-2">
+                    <!-- Edit Button -->
+                    <a href="{{ route('kegiatan.proposal.upload', $kegiatan) }}" class="btn btn-primary w-100 mb-2">
                         <i class="bx bx-edit me-1"></i> Edit Proposal
                     </a>
-                    @endif
 
-                    @if($proposalFile && $kegiatan->status === 'draft')
-                    <form action="{{ route('kegiatan.proposal.delete', [$kegiatan, $proposalFile]) }}" method="POST">
+                    <!-- Hapus Button (hanya untuk draft) -->
+                    @if($kegiatan->status === 'draft')
+                    <form action="{{ route('kegiatan.proposal.delete', [$kegiatan, $proposalFile]) }}" method="POST" class="mb-2">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger w-100 mb-2"
+                        <button type="submit" class="btn btn-danger w-100"
                                 onclick="return confirm('Yakin ingin menghapus proposal ini?')">
                             <i class="bx bx-trash me-1"></i> Hapus Proposal
                         </button>
                     </form>
+                    @endif
                     @endif
 
                     <hr class="my-3">

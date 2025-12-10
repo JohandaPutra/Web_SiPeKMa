@@ -39,38 +39,39 @@
             </div>
             <div class="card-body">
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Nama Kegiatan:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->nama_kegiatan }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Nama Kegiatan:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->nama_kegiatan }}</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Jenis Kegiatan:</strong></div>
-                    <div class="col-sm-8">
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Kegiatan:</strong></div>
+                    <div class="col-12 col-sm-8">
                         <span class="badge bg-label-info">{{ ucfirst($kegiatan->jenis_kegiatan) }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Deskripsi:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->deskripsi_kegiatan }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Deskripsi:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->deskripsi_kegiatan }}</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Tempat:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->tempat_kegiatan }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Tempat:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->tempat_kegiatan }}</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Tanggal:</strong></div>
-                    <div class="col-sm-8">
-                        {{ $kegiatan->tanggal_mulai->format('d M Y') }} s/d {{ $kegiatan->tanggal_akhir->format('d M Y') }}
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Tanggal:</strong></div>
+                    <div class="col-12 col-sm-8">
+                        <span class="d-block d-sm-inline">{{ $kegiatan->tanggal_mulai->format('d M Y') }}</span>
+                        <span class="d-block d-sm-inline">s/d {{ $kegiatan->tanggal_akhir->format('d M Y') }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Jenis Pendanaan:</strong></div>
-                    <div class="col-sm-8">
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Pendanaan:</strong></div>
+                    <div class="col-12 col-sm-8">
                         <span class="badge bg-label-primary">{{ ucfirst($kegiatan->jenis_pendanaan) }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Total Anggaran:</strong></div>
-                    <div class="col-sm-8">
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Total Anggaran:</strong></div>
+                    <div class="col-12 col-sm-8">
                         @if($kegiatan->total_anggaran)
                         <h5 class="mb-0 text-success">Rp {{ number_format($kegiatan->total_anggaran, 0, ',', '.') }}</h5>
                         @else
@@ -171,10 +172,7 @@
                             </div>
                             <div class="ms-3 flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <div>
-                                        <h6 class="mb-0">{{ $history->approver->role->display_name }}</h6>
-                                        <small class="text-muted">{{ $history->approver->username }}</small>
-                                    </div>
+                                    <h6 class="mb-0">{{ $history->approver->role->display_name }}</h6>
                                     <small class="text-muted">{{ $history->approved_at->format('d M Y H:i') }}</small>
                                 </div>
                                 <span class="badge bg-{{ $history->actionBadge }} mb-2">
@@ -358,7 +356,7 @@
                     @endif
 
                     @if($rabFile && in_array($kegiatan->status, ['draft', 'revision']))
-                    <!-- Submit untuk persetujuan -->
+                    <!-- Submit Button -->
                     <form action="{{ route('kegiatan.pendanaan.submit', $kegiatan) }}" method="POST" class="mb-2">
                         @csrf
                         <button type="submit" class="btn btn-success w-100"
@@ -367,21 +365,22 @@
                         </button>
                     </form>
 
-                    <!-- Edit RAB -->
-                    <a href="{{ route('kegiatan.pendanaan.upload', $kegiatan) }}" class="btn btn-warning w-100 mb-2">
+                    <!-- Edit Button -->
+                    <a href="{{ route('kegiatan.pendanaan.upload', $kegiatan) }}" class="btn btn-primary w-100 mb-2">
                         <i class="bx bx-edit me-1"></i> Edit RAB
                     </a>
-                    @endif
 
-                    @if($rabFile && $kegiatan->status === 'draft')
-                    <form action="{{ route('kegiatan.pendanaan.delete', [$kegiatan, $rabFile]) }}" method="POST">
+                    <!-- Hapus Button (hanya untuk draft) -->
+                    @if($kegiatan->status === 'draft')
+                    <form action="{{ route('kegiatan.pendanaan.delete', [$kegiatan, $rabFile]) }}" method="POST" class="mb-2">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger w-100 mb-2"
+                        <button type="submit" class="btn btn-danger w-100"
                                 onclick="return confirm('Yakin ingin menghapus RAB ini?')">
                             <i class="bx bx-trash me-1"></i> Hapus RAB
                         </button>
                     </form>
+                    @endif
                     @endif
 
                     <hr class="my-3">

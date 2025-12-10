@@ -16,7 +16,7 @@
                 <a href="{{ route('dashboard-analytics') }}" class="text-muted">Dashboard</a>
             </li>
             <li class="breadcrumb-item">
-                <a href="{{ route('kegiatan.riwayat.index') }}" class="text-muted">Riwayat</a>
+                <a href="{{ route('kegiatan.riwayat') }}" class="text-muted">Riwayat</a>
             </li>
             <li class="breadcrumb-item active">Detail</li>
         </ol>
@@ -39,41 +39,40 @@
             </div>
             <div class="card-body">
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Nama Kegiatan:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->nama_kegiatan }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Nama Kegiatan:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->nama_kegiatan }}</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Jenis Kegiatan:</strong></div>
-                    <div class="col-sm-8">
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Kegiatan:</strong></div>
+                    <div class="col-12 col-sm-8">
                         <span class="badge bg-label-info">{{ ucfirst($kegiatan->jenis_kegiatan) }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Deskripsi:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->deskripsi_kegiatan }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Deskripsi:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->deskripsi_kegiatan }}</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Tempat:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->tempat_kegiatan }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Tempat:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->tempat_kegiatan }}</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Tanggal:</strong></div>
-                    <div class="col-sm-8">
-                        {{ \Carbon\Carbon::parse($kegiatan->tanggal_mulai)->format('d M Y') }}
-                        s/d
-                        {{ \Carbon\Carbon::parse($kegiatan->tanggal_akhir)->format('d M Y') }}
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Tanggal:</strong></div>
+                    <div class="col-12 col-sm-8">
+                        <span class="d-block d-sm-inline">{{ \Carbon\Carbon::parse($kegiatan->tanggal_mulai)->format('d M Y') }}</span>
+                        <span class="d-block d-sm-inline">s/d {{ \Carbon\Carbon::parse($kegiatan->tanggal_akhir)->format('d M Y') }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Jenis Pendanaan:</strong></div>
-                    <div class="col-sm-8">
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Pendanaan:</strong></div>
+                    <div class="col-12 col-sm-8">
                         <span class="badge bg-label-warning">{{ ucfirst($kegiatan->jenis_pendanaan) }}</span>
                     </div>
                 </div>
                 @if($kegiatan->total_anggaran)
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Total Anggaran:</strong></div>
-                    <div class="col-sm-8">
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Total Anggaran:</strong></div>
+                    <div class="col-12 col-sm-8">
                         <strong class="text-success">Rp {{ number_format($kegiatan->total_anggaran, 0, ',', '.') }}</strong>
                     </div>
                 </div>
@@ -103,7 +102,7 @@
                             $usulanApprovals = isset($approvalsByTahap['usulan']) ? $approvalsByTahap['usulan'] : collect();
                             $usulanApprovedCount = $usulanApprovals->where('action', 'approved')->count();
                             $usulanRejected = $usulanApprovals->where('action', 'rejected')->count() > 0;
-                            
+
                             if ($usulanRejected) {
                                 $usulanStatus = 'Ditolak';
                                 $usulanBadge = 'danger';
@@ -122,7 +121,7 @@
                             }
                             @endphp
                             <span class="badge bg-{{ $usulanBadge }} mb-2">{{ $usulanStatus }}</span><br>
-                            <a href="{{ route('kegiatan.show', $kegiatan) }}" 
+                            <a href="{{ route('kegiatan.show', $kegiatan) }}"
                                class="btn btn-sm btn-{{ $usulanBadge }}">
                                 <i class="bx bx-show me-1"></i> Lihat Detail
                             </a>
@@ -138,7 +137,7 @@
                             $proposalApprovals = isset($approvalsByTahap['proposal']) ? $approvalsByTahap['proposal'] : collect();
                             $proposalApprovedCount = $proposalApprovals->where('action', 'approved')->count();
                             $proposalRejected = $proposalApprovals->where('action', 'rejected')->count() > 0;
-                            
+
                             // Cek ditolak dulu sebagai prioritas tertinggi
                             if ($proposalRejected) {
                                 $proposalStatus = 'Ditolak';
@@ -172,7 +171,7 @@
                                 <i class="bx bx-show me-1"></i> Lihat Detail
                             </button>
                             @else
-                            <a href="{{ route('kegiatan.proposal.show', $kegiatan) }}" 
+                            <a href="{{ route('kegiatan.proposal.show', $kegiatan) }}"
                                class="btn btn-sm btn-{{ $proposalBadge }}">
                                 <i class="bx bx-show me-1"></i> Lihat Detail
                             </a>
@@ -189,7 +188,7 @@
                             $pendanaanApprovals = isset($approvalsByTahap['pendanaan']) ? $approvalsByTahap['pendanaan'] : collect();
                             $pendanaanApprovedCount = $pendanaanApprovals->where('action', 'approved')->count();
                             $pendanaanRejected = $pendanaanApprovals->where('action', 'rejected')->count() > 0;
-                            
+
                             // Cek ditolak dulu sebagai prioritas tertinggi
                             if ($pendanaanRejected) {
                                 $pendanaanStatus = 'Ditolak';
@@ -223,7 +222,7 @@
                                 <i class="bx bx-show me-1"></i> Lihat Detail
                             </button>
                             @else
-                            <a href="{{ route('kegiatan.pendanaan.show', $kegiatan) }}" 
+                            <a href="{{ route('kegiatan.pendanaan.show', $kegiatan) }}"
                                class="btn btn-sm btn-{{ $pendanaanBadge }}">
                                 <i class="bx bx-show me-1"></i> Lihat Detail
                             </a>
@@ -240,7 +239,7 @@
                             $laporanApprovals = isset($approvalsByTahap['laporan']) ? $approvalsByTahap['laporan'] : collect();
                             $laporanApprovedCount = $laporanApprovals->where('action', 'approved')->count();
                             $laporanRejected = $laporanApprovals->where('action', 'rejected')->count() > 0;
-                            
+
                             // Cek ditolak dulu sebagai prioritas tertinggi
                             if ($laporanRejected) {
                                 $laporanStatus = 'Ditolak';
@@ -274,7 +273,7 @@
                                 <i class="bx bx-show me-1"></i> Lihat Detail
                             </button>
                             @else
-                            <a href="{{ route('kegiatan.laporan.show', $kegiatan) }}" 
+                            <a href="{{ route('kegiatan.laporan.show', $kegiatan) }}"
                                class="btn btn-sm btn-{{ $laporanBadge }}">
                                 <i class="bx bx-show me-1"></i> Lihat Detail
                             </a>
@@ -282,7 +281,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="alert alert-info mt-3 mb-0">
                     <i class="bx bx-info-circle me-1"></i>
                     <small>Klik <strong>"Lihat Detail"</strong> untuk melihat informasi lengkap file, riwayat persetujuan, dan tahapan setiap kegiatan</small>
@@ -317,12 +316,12 @@
                     $isCurrent = $key === $kegiatan->tahap;
                     $isCompleted = $kegiatan->current_approver_role === 'completed' && $key === 'laporan';
                     @endphp
-                    
+
                     <div class="timeline-item {{ $isPassed || $isCurrent || $isCompleted ? 'timeline-item-active' : '' }} mb-3">
                         <div class="d-flex align-items-center">
-                            <div class="timeline-indicator 
-                                {{ $isPassed || $isCompleted ? 'bg-success' : ($isCurrent ? 'bg-' . $stage['color'] : 'bg-secondary') }} 
-                                text-white rounded-circle d-flex align-items-center justify-content-center" 
+                            <div class="timeline-indicator
+                                {{ $isPassed || $isCompleted ? 'bg-success' : ($isCurrent ? 'bg-' . $stage['color'] : 'bg-secondary') }}
+                                text-white rounded-circle d-flex align-items-center justify-content-center"
                                 style="width: 40px; height: 40px;">
                                 <i class="bx {{ $stage['icon'] }}"></i>
                             </div>
@@ -374,10 +373,10 @@
                 <div class="mt-4">
                     <label class="form-label mb-2">Progress Keseluruhan:</label>
                     <div class="progress" style="height: 10px;">
-                        <div class="progress-bar bg-success" role="progressbar" 
+                        <div class="progress-bar bg-success" role="progressbar"
                              style="width: {{ $overallProgress }}%"
-                             aria-valuenow="{{ $overallProgress }}" 
-                             aria-valuemin="0" 
+                             aria-valuenow="{{ $overallProgress }}"
+                             aria-valuemin="0"
                              aria-valuemax="100">
                         </div>
                     </div>
@@ -391,7 +390,7 @@
         <!-- Back Button -->
         <div class="card">
             <div class="card-body">
-                <a href="{{ route('kegiatan.riwayat.index') }}" class="btn btn-label-secondary w-100">
+                <a href="{{ route('kegiatan.riwayat') }}" class="btn btn-label-secondary w-100">
                     <i class="bx bx-arrow-back me-1"></i> Kembali ke Daftar Riwayat
                 </a>
             </div>

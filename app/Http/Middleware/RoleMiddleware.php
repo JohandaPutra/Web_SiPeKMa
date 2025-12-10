@@ -18,7 +18,7 @@ class RoleMiddleware
     {
         // Check if user is authenticated
         if (!auth()->check()) {
-            return redirect()->route('auth-login-basic')->with('error', 'Silakan login terlebih dahulu.');
+            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
 
         // Check if user has one of the required roles

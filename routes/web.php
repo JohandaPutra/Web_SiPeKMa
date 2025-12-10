@@ -54,8 +54,16 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/quick-login', [AuthController::class, 'quickLogin'])->name('quick-login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Main Page Route
-Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
+// Main Page Route - redirect to login if not authenticated
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard-analytics');
+    }
+    return redirect()->route('login');
+});
+
+// Dashboard Route - protected by auth
+Route::get('/dashboard', [Analytics::class, 'index'])->middleware('auth')->name('dashboard-analytics');
 
 // layout
 Route::get('/layouts/without-menu', [WithoutMenu::class, 'index'])->name('layouts-without-menu');
@@ -118,18 +126,21 @@ Route::get('/form/layouts-horizontal', [HorizontalForm::class, 'index'])->name('
 // tables
 Route::get('/tables/basic', [TablesBasic::class, 'index'])->name('tables-basic');
 
-Route::get('/users', [UsersController::class, 'index'])->name('users.index');
+// Users routes - protected by auth
+Route::middleware('auth')->group(function () {
+    Route::get('/users', [UsersController::class, 'index'])->name('users.index');
+});
 
 // Usulan Kegiatan routes (tanpa auth untuk testing - DEPRECATED, will be removed)
 Route::resource('usulan-kegiatan', UsulanKegiatanController::class);
 
-// Kegiatan routes dengan middleware role
+// Kegiatan routes dengan middleware auth dan role
 use App\Http\Controllers\KegiatanController;
 
-Route::middleware(['role:hima,pembina_hima,kaprodi,wadek_iii'])->group(function () {
+Route::middleware(['auth', 'role:hima,pembina_hima,kaprodi,wadek_iii'])->group(function () {
     // Riwayat Kegiatan routes
-    Route::get('riwayat', [KegiatanController::class, 'riwayat'])->name('kegiatan.riwayat.index');
-    Route::get('riwayat/{kegiatan}', [KegiatanController::class, 'showRiwayat'])->name('kegiatan.riwayat.show');
+    Route::get('kegiatan/riwayat', [KegiatanController::class, 'riwayat'])->name('kegiatan.riwayat');
+    Route::get('kegiatan/riwayat/{kegiatan}', [KegiatanController::class, 'showRiwayat'])->name('kegiatan.riwayat.show');
 
     Route::resource('kegiatan', KegiatanController::class);
 

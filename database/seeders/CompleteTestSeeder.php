@@ -18,7 +18,7 @@ class CompleteTestSeeder extends Seeder
      * Seeder ini membuat data lengkap untuk testing dengan 2 prodi:
      * - Sistem Informasi
      * - Teknik Informatika
-     * 
+     *
      * Mencakup semua tahapan: usulan, proposal, pendanaan, laporan
      * dengan berbagai status: approved, rejected, revision, submitted, draft
      */

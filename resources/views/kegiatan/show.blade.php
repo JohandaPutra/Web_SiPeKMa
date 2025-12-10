@@ -39,42 +39,43 @@
             </div>
             <div class="card-body">
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Nama Kegiatan:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->nama_kegiatan }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Nama Kegiatan:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->nama_kegiatan }}</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Jenis Kegiatan:</strong></div>
-                    <div class="col-sm-8">
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Kegiatan:</strong></div>
+                    <div class="col-12 col-sm-8">
                         <span class="badge bg-label-info">{{ ucfirst($kegiatan->jenis_kegiatan) }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Deskripsi:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->deskripsi_kegiatan }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Deskripsi:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->deskripsi_kegiatan }}</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Tempat:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->tempat_kegiatan }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Tempat:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->tempat_kegiatan }}</div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Tanggal:</strong></div>
-                    <div class="col-sm-8">
-                        {{ $kegiatan->tanggal_mulai->format('d M Y') }} s/d {{ $kegiatan->tanggal_akhir->format('d M Y') }}
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Tanggal:</strong></div>
+                    <div class="col-12 col-sm-8">
+                        <span class="d-block d-sm-inline">{{ $kegiatan->tanggal_mulai->format('d M Y') }}</span>
+                        <span class="d-block d-sm-inline">s/d {{ $kegiatan->tanggal_akhir->format('d M Y') }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Jenis Pendanaan:</strong></div>
-                    <div class="col-sm-8">
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Pendanaan:</strong></div>
+                    <div class="col-12 col-sm-8">
                         <span class="badge bg-label-primary">{{ ucfirst($kegiatan->jenis_pendanaan) }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <div class="col-sm-4"><strong>Diajukan Oleh:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->user->name }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Diajukan Oleh:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->user->name }}</div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-4"><strong>Dibuat:</strong></div>
-                    <div class="col-sm-8">{{ $kegiatan->created_at->format('d M Y H:i') }}</div>
+                    <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Dibuat:</strong></div>
+                    <div class="col-12 col-sm-8">{{ $kegiatan->created_at->format('d M Y H:i') }}</div>
                 </div>
             </div>
         </div>
@@ -90,7 +91,7 @@
                 @php
                     $usulanHistories = $kegiatan->approvalHistories->where('tahap', 'usulan');
                 @endphp
-                
+
                 @if($usulanHistories->count() > 0)
                 <div class="timeline">
                     @foreach($usulanHistories->sortByDesc('approved_at') as $history)
@@ -101,10 +102,7 @@
                             </div>
                             <div class="ms-3 flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <div>
-                                        <h6 class="mb-0">{{ $history->approver->role->display_name }}</h6>
-                                        <small class="text-muted">{{ $history->approver->username }}</small>
-                                    </div>
+                                    <h6 class="mb-0">{{ $history->approver->role->display_name }}</h6>
                                     <small class="text-muted">{{ $history->approved_at->format('d M Y H:i') }}</small>
                                 </div>
                                 <span class="badge bg-{{ $history->actionBadge }} mb-2">
@@ -145,8 +143,8 @@
                 $usulanCompleted = $usulanApprovedCount >= 3 || $kegiatan->tahap !== 'usulan';
                 $usulanRejected = $usulanApprovals->where('action', 'rejected')->count() > 0;
                 $usulanRejectedHistory = $usulanRejected ? $usulanApprovals->where('action', 'rejected')->first() : null;
-                $usulanRevision = $usulanApprovals->where('action', 'revision')->count() > 0 && 
-                                  $kegiatan->tahap === 'usulan' && 
+                $usulanRevision = $usulanApprovals->where('action', 'revision')->count() > 0 &&
+                                  $kegiatan->tahap === 'usulan' &&
                                   $kegiatan->status === 'revision';
                 @endphp
 
@@ -218,7 +216,7 @@
                     // Hitung progress berdasarkan approval yang sudah ada untuk tahap usulan
                     $usulanApprovals = $kegiatan->approvalHistories->where('tahap', 'usulan')->where('action', 'approved');
                     $approvedCount = $usulanApprovals->count();
-                    
+
                     if ($approvedCount >= 3 || $kegiatan->tahap !== 'usulan') {
                         $progress = 100; // Semua approval selesai atau sudah pindah tahap
                     } elseif ($approvedCount == 2) {
@@ -275,9 +273,7 @@
 
                 <!-- Tombol untuk status draft atau revision -->
                 @if($kegiatan->tahap === 'usulan' && in_array($kegiatan->status, ['draft', 'revision']))
-                <a href="{{ route('kegiatan.edit', $kegiatan) }}" class="btn btn-primary w-100 mb-2">
-                    <i class="bx bx-edit me-1"></i> Edit Usulan
-                </a>
+                <!-- Submit Button -->
                 <form action="{{ route('kegiatan.submit', $kegiatan) }}" method="POST" class="mb-2">
                     @csrf
                     <button type="submit" class="btn btn-success w-100"
@@ -285,18 +281,23 @@
                         <i class="bx bx-send me-1"></i> Submit Usulan
                     </button>
                 </form>
-                @endif
 
-                <!-- Tombol hapus hanya untuk draft yang belum selesai -->
-                @if($kegiatan->status === 'draft' && $kegiatan->tahap === 'usulan' && !$usulanSelesai)
+                <!-- Edit Button -->
+                <a href="{{ route('kegiatan.edit', $kegiatan) }}" class="btn btn-primary w-100 mb-2">
+                    <i class="bx bx-edit me-1"></i> Edit Usulan
+                </a>
+
+                <!-- Hapus Button (hanya untuk draft yang belum selesai) -->
+                @if($kegiatan->status === 'draft' && !$usulanSelesai)
                 <form action="{{ route('kegiatan.destroy', $kegiatan) }}" method="POST" class="mb-2">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger w-100"
                             onclick="return confirm('Yakin ingin menghapus usulan ini?')">
-                        <i class="bx bx-trash me-1"></i> Hapus
+                        <i class="bx bx-trash me-1"></i> Hapus Usulan
                     </button>
                 </form>
+                @endif
                 @endif
 
                 <a href="{{ route('kegiatan.index') }}" class="btn btn-label-secondary w-100">

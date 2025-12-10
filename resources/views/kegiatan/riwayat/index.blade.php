@@ -22,11 +22,92 @@
 
 @include('_partials/toast')
 
+<!-- Filter Section -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" action="{{ route('kegiatan.riwayat') }}" id="filterForm">
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="row g-3">
+                        <!-- Search Box -->
+                        <div class="col-md-5">
+                            <label class="form-label">Cari Kegiatan</label>
+                            <input type="text" name="search" class="form-control" placeholder="Cari nama kegiatan..." value="{{ request('search') }}">
+                        </div>
+
+                        <!-- Filter Prodi (hanya untuk Wadek III) -->
+                        @if(Auth::check() && Auth::user()->isWadek())
+                        <div class="col-md-3">
+                            <label class="form-label">Program Studi</label>
+                            <select name="prodi_id" class="form-select">
+                                <option value="">Semua Prodi</option>
+                                @foreach($prodis as $prodi)
+                                <option value="{{ $prodi->id }}" {{ request('prodi_id') == $prodi->id ? 'selected' : '' }}>
+                                    {{ $prodi->nama_prodi }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
+
+                        <!-- Filter Tahapan -->
+                        <div class="col-md-{{ Auth::check() && Auth::user()->isWadek() ? '4' : '7' }}">
+                            <div class="row g-2">
+                                <div class="col-md-{{ Auth::check() && Auth::user()->isWadek() ? '6' : '8' }}">
+                                    <label class="form-label">Tahapan</label>
+                                    <select name="tahap" class="form-select">
+                                        <option value="">Semua Tahapan</option>
+                                        <option value="usulan" {{ request('tahap') === 'usulan' ? 'selected' : '' }}>Usulan</option>
+                                        <option value="proposal" {{ request('tahap') === 'proposal' ? 'selected' : '' }}>Proposal</option>
+                                        <option value="pendanaan" {{ request('tahap') === 'pendanaan' ? 'selected' : '' }}>Pendanaan</option>
+                                        <option value="laporan" {{ request('tahap') === 'laporan' ? 'selected' : '' }}>Laporan</option>
+                                    </select>
+                                </div>
+                                <!-- Buttons -->
+                                <div class="col-md-{{ Auth::check() && Auth::user()->isWadek() ? '6' : '4' }} d-flex align-items-end justify-content-end">
+                                    <button type="submit" class="btn btn-primary me-2">
+                                        <i class="bx bx-filter-alt"></i> Filter
+                                    </button>
+                                    <a href="{{ route('kegiatan.riwayat') }}" class="btn btn-label-secondary">
+                                        <i class="bx bx-reset"></i> Reset
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Kegiatan Table -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Daftar Riwayat Kegiatan</h5>
-        <span class="badge bg-label-primary">{{ $kegiatans->count() }} Kegiatan</span>
+        <div class="d-flex align-items-center gap-2">
+            <form method="GET" action="{{ route('kegiatan.riwayat') }}" id="perPageForm" class="d-flex align-items-center gap-2">
+                <!-- Preserve existing filters -->
+                @if(request('search'))
+                <input type="hidden" name="search" value="{{ request('search') }}">
+                @endif
+                @if(request('prodi_id'))
+                <input type="hidden" name="prodi_id" value="{{ request('prodi_id') }}">
+                @endif
+                @if(request('tahap'))
+                <input type="hidden" name="tahap" value="{{ request('tahap') }}">
+                @endif
+
+                <label class="form-label mb-0 text-nowrap">Tampilkan:</label>
+                <select name="per_page" class="form-select form-select-sm" style="width: 100px;" onchange="this.form.submit()">
+                    <option value="5" {{ request('per_page', 10) == 5 ? 'selected' : '' }}>5</option>
+                    <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                    <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
+                    <option value="50" {{ request('per_page', 10) == 50 ? 'selected' : '' }}>50</option>
+                    <option value="all" {{ request('per_page', 10) == 'all' ? 'selected' : '' }}>Semua</option>
+                </select>
+            </form>
+        </div>
     </div>
     <div class="card-body">
         @if($kegiatans->count() > 0)
@@ -38,7 +119,10 @@
                         <th>Nama Kegiatan</th>
                         <th>Jenis Kegiatan</th>
                         <th>Tanggal Kegiatan</th>
+                        @if(Auth::check() && Auth::user()->isWadek())
                         <th>Program Studi</th>
+                        @endif
+                        <th>Berada di</th>
                         <th>Tahap</th>
                         <th>Status</th>
                         <th>Progress</th>
@@ -61,8 +145,30 @@
                             <br><small class="text-muted">s/d {{ \Carbon\Carbon::parse($kegiatan->tanggal_akhir)->format('d M Y') }}</small>
                             @endif
                         </td>
+                        @if(Auth::check() && Auth::user()->isWadek())
                         <td>
                             <span class="badge bg-label-primary">{{ $kegiatan->prodi->nama_prodi }}</span>
+                        </td>
+                        @endif
+                        <td>
+                            @php
+                            $currentApprover = 'Selesai';
+                            if ($kegiatan->current_approver_role === 'completed') {
+                                $currentApprover = '<span class="badge bg-success">Selesai</span>';
+                            } elseif ($kegiatan->current_approver_role) {
+                                $roleDisplayNames = [
+                                    'Hima' => 'Hima',
+                                    'Pembina Hima' => 'Pembina',
+                                    'Kaprodi' => 'Kaprodi',
+                                    'Wadek III' => 'Wadek III'
+                                ];
+                                $displayName = $roleDisplayNames[$kegiatan->current_approver_role] ?? $kegiatan->current_approver_role;
+                                $currentApprover = '<span class="badge bg-info">' . $displayName . '</span>';
+                            } else {
+                                $currentApprover = '<span class="badge bg-secondary">Draft</span>';
+                            }
+                            @endphp
+                            {!! $currentApprover !!}
                         </td>
                         <td>
                             <span class="badge bg-{{ $kegiatan->tahapBadge }}">{{ ucfirst($kegiatan->tahap) }}</span>
@@ -87,10 +193,10 @@
                             @endphp
                             <div class="d-flex align-items-center">
                                 <div class="progress flex-grow-1 me-2" style="height: 8px; width: 80px;">
-                                    <div class="progress-bar bg-success" role="progressbar" 
-                                         style="width: {{ $progress }}%" 
-                                         aria-valuenow="{{ $progress }}" 
-                                         aria-valuemin="0" 
+                                    <div class="progress-bar bg-success" role="progressbar"
+                                         style="width: {{ $progress }}%"
+                                         aria-valuenow="{{ $progress }}"
+                                         aria-valuemin="0"
                                          aria-valuemax="100">
                                     </div>
                                 </div>
@@ -98,7 +204,7 @@
                             </div>
                         </td>
                         <td>
-                            <a href="{{ route('kegiatan.riwayat.show', $kegiatan) }}" 
+                            <a href="{{ route('kegiatan.riwayat.show', $kegiatan) }}"
                                class="btn btn-sm btn-primary">
                                 <i class="bx bx-show me-1"></i> Detail
                             </a>
@@ -108,6 +214,14 @@
                 </tbody>
             </table>
         </div>
+
+        @if(is_object($kegiatans) && method_exists($kegiatans, 'hasPages') && $kegiatans->hasPages())
+        <div class="mt-3 d-flex justify-content-end">
+            <nav>
+                {{ $kegiatans->onEachSide(1)->links('pagination::bootstrap-4', ['class' => 'pagination-sm']) }}
+            </nav>
+        </div>
+        @endif
         @else
         <div class="text-center py-5">
             <i class="bx bx-time-five bx-lg text-muted mb-3"></i>

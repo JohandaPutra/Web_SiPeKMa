@@ -24,11 +24,20 @@
 
 <!-- Proposal List -->
 <div class="card">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">
             Daftar Proposal
-            <span class="badge bg-label-info ms-2">{{ $kegiatans->count() }}</span>
         </h5>
+        <form method="GET" action="{{ route('kegiatan.proposal.index') }}" class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0 text-nowrap">Tampilkan:</label>
+            <select name="per_page" class="form-select form-select-sm" style="width: 100px;" onchange="this.form.submit()">
+                <option value="5" {{ request('per_page', 10) == 5 ? 'selected' : '' }}>5</option>
+                <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
+                <option value="50" {{ request('per_page', 10) == 50 ? 'selected' : '' }}>50</option>
+                <option value="all" {{ request('per_page', 10) == 'all' ? 'selected' : '' }}>Semua</option>
+            </select>
+        </form>
     </div>
     <div class="card-body">
         @if($kegiatans->count() > 0)
@@ -118,6 +127,14 @@
                 </tbody>
             </table>
         </div>
+
+        @if(is_object($kegiatans) && method_exists($kegiatans, 'hasPages') && $kegiatans->hasPages())
+        <div class="mt-3 d-flex justify-content-end">
+            <nav>
+                {{ $kegiatans->onEachSide(1)->links('pagination::bootstrap-4', ['class' => 'pagination-sm']) }}
+            </nav>
+        </div>
+        @endif
         @else
         <div class="text-center py-5">
             <i class="bx bx-file-blank bx-lg text-muted mb-3"></i>
