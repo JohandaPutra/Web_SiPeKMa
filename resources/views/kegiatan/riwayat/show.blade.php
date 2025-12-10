@@ -143,14 +143,16 @@
                                 $proposalStatus = 'Ditolak';
                                 $proposalBadge = 'danger';
                                 $proposalDisabled = false;
-                            } elseif (!$proposalFile) {
-                                $proposalStatus = 'Belum Upload';
-                                $proposalBadge = 'secondary';
-                                $proposalDisabled = true;
                             } elseif ($proposalApprovedCount >= 3 || ($kegiatan->tahap !== 'proposal' && $kegiatan->tahap !== 'usulan')) {
+                                // Tahap proposal sudah selesai/disetujui (pindah ke pendanaan/laporan)
                                 $proposalStatus = 'Disetujui';
                                 $proposalBadge = 'success';
                                 $proposalDisabled = false;
+                            } elseif (!$proposalFile && in_array($kegiatan->tahap, ['usulan', 'proposal'])) {
+                                // Belum upload dan masih di tahap usulan/proposal
+                                $proposalStatus = 'Belum Upload';
+                                $proposalBadge = 'secondary';
+                                $proposalDisabled = true;
                             } elseif ($kegiatan->tahap === 'proposal' && $kegiatan->status === 'submitted') {
                                 $proposalStatus = 'Progress';
                                 $proposalBadge = 'info';
@@ -194,14 +196,16 @@
                                 $pendanaanStatus = 'Ditolak';
                                 $pendanaanBadge = 'danger';
                                 $pendanaanDisabled = false;
-                            } elseif (!$rabFile) {
-                                $pendanaanStatus = 'Belum Upload';
-                                $pendanaanBadge = 'secondary';
-                                $pendanaanDisabled = true;
                             } elseif ($pendanaanApprovedCount >= 3 || $kegiatan->tahap === 'laporan') {
+                                // Tahap pendanaan sudah selesai/disetujui (pindah ke laporan)
                                 $pendanaanStatus = 'Disetujui';
                                 $pendanaanBadge = 'success';
                                 $pendanaanDisabled = false;
+                            } elseif (!$rabFile && in_array($kegiatan->tahap, ['usulan', 'proposal', 'pendanaan'])) {
+                                // Belum upload dan masih di tahap sebelum atau saat pendanaan
+                                $pendanaanStatus = 'Belum Upload';
+                                $pendanaanBadge = 'secondary';
+                                $pendanaanDisabled = true;
                             } elseif ($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'submitted') {
                                 $pendanaanStatus = 'Progress';
                                 $pendanaanBadge = 'info';
@@ -245,14 +249,16 @@
                                 $laporanStatus = 'Ditolak';
                                 $laporanBadge = 'danger';
                                 $laporanDisabled = false;
-                            } elseif (!$laporanFile) {
-                                $laporanStatus = 'Belum Upload';
-                                $laporanBadge = 'secondary';
-                                $laporanDisabled = true;
                             } elseif ($laporanApprovedCount >= 3) {
+                                // Laporan sudah disetujui lengkap (selesai)
                                 $laporanStatus = 'Disetujui';
                                 $laporanBadge = 'success';
                                 $laporanDisabled = false;
+                            } elseif (!$laporanFile && $kegiatan->tahap === 'laporan') {
+                                // Belum upload dan masih di tahap laporan
+                                $laporanStatus = 'Belum Upload';
+                                $laporanBadge = 'secondary';
+                                $laporanDisabled = true;
                             } elseif ($kegiatan->tahap === 'laporan' && $kegiatan->status === 'submitted') {
                                 $laporanStatus = 'Progress';
                                 $laporanBadge = 'info';

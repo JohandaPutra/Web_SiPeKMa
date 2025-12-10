@@ -348,11 +348,6 @@
                     <a href="{{ route('kegiatan.pendanaan.upload', $kegiatan) }}" class="btn btn-primary w-100 mb-2">
                         <i class="bx bx-upload me-1"></i> Upload RAB
                     </a>
-                    @elseif($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'revision')
-                    <!-- Upload ulang saat revisi -->
-                    <a href="{{ route('kegiatan.pendanaan.upload', $kegiatan) }}" class="btn btn-warning w-100 mb-2">
-                        <i class="bx bx-upload me-1"></i> Upload Ulang RAB
-                    </a>
                     @endif
 
                     @if($rabFile && in_array($kegiatan->status, ['draft', 'revision']))
@@ -366,8 +361,8 @@
                     </form>
 
                     <!-- Edit Button -->
-                    <a href="{{ route('kegiatan.pendanaan.upload', $kegiatan) }}" class="btn btn-primary w-100 mb-2">
-                        <i class="bx bx-edit me-1"></i> Edit RAB
+                    <a href="{{ route('kegiatan.pendanaan.upload', $kegiatan) }}" class="btn btn-{{ $kegiatan->status === 'revision' ? 'warning' : 'primary' }} w-100 mb-2">
+                        <i class="bx bx-edit me-1"></i> {{ $kegiatan->status === 'revision' ? 'Edit & Upload Ulang RAB' : 'Edit RAB' }}
                     </a>
 
                     <!-- Hapus Button (hanya untuk draft) -->

@@ -344,12 +344,6 @@
                     </a>
                     @endif
 
-                    @if($kegiatan->tahap === 'proposal' && $kegiatan->status === 'revision')
-                    <a href="{{ route('kegiatan.proposal.upload', $kegiatan) }}" class="btn btn-warning w-100 mb-2">
-                        <i class="bx bx-upload me-1"></i> Upload Ulang Proposal
-                    </a>
-                    @endif
-
                     @if($proposalFile && in_array($kegiatan->status, ['draft', 'revision']))
                     <!-- Submit Button -->
                     <form action="{{ route('kegiatan.proposal.submit', $kegiatan) }}" method="POST" class="mb-2">
@@ -361,8 +355,8 @@
                     </form>
 
                     <!-- Edit Button -->
-                    <a href="{{ route('kegiatan.proposal.upload', $kegiatan) }}" class="btn btn-primary w-100 mb-2">
-                        <i class="bx bx-edit me-1"></i> Edit Proposal
+                    <a href="{{ route('kegiatan.proposal.upload', $kegiatan) }}" class="btn btn-{{ $kegiatan->status === 'revision' ? 'warning' : 'primary' }} w-100 mb-2">
+                        <i class="bx bx-edit me-1"></i> {{ $kegiatan->status === 'revision' ? 'Edit & Upload Ulang Proposal' : 'Edit Proposal' }}
                     </a>
 
                     <!-- Hapus Button (hanya untuk draft) -->

@@ -385,8 +385,20 @@
                         @endif
 
                     @elseif($kegiatan->status === 'revision')
+                    <!-- Submit Button (jika ada file) -->
+                    @if($laporanFile)
+                    <form action="{{ route('kegiatan.laporan.submit', $kegiatan) }}" method="POST" class="mb-2">
+                        @csrf
+                        <button type="submit" class="btn btn-success w-100"
+                                onclick="return confirm('Yakin ingin submit LPJ untuk persetujuan?')">
+                            <i class="bx bx-send me-1"></i> Submit untuk Persetujuan
+                        </button>
+                    </form>
+                    @endif
+                    
+                    <!-- Edit Button -->
                     <a href="{{ route('kegiatan.laporan.upload', $kegiatan) }}" class="btn btn-warning w-100 mb-2">
-                        <i class="bx bx-edit me-1"></i> Upload Revisi LPJ
+                        <i class="bx bx-edit me-1"></i> {{ $laporanFile ? 'Edit & Upload Ulang LPJ' : 'Upload LPJ' }}
                     </a>
                     @endif
 

@@ -88,10 +88,10 @@ class KegiatanController extends Controller
         // Group approval histories by tahap
         $approvalsByTahap = $kegiatan->approvalHistories->groupBy('tahap');
 
-        // Get files by type
-        $proposalFile = $kegiatan->files->where('file_type', 'proposal')->first();
-        $rabFile = $kegiatan->files->where('file_type', 'rab')->first();
-        $laporanFile = $kegiatan->files->where('file_type', 'laporan')->first();
+        // Get files by tahap (gunakan field 'tahap' bukan 'file_type')
+        $proposalFile = $kegiatan->files->where('tahap', 'proposal')->first();
+        $rabFile = $kegiatan->files->where('tahap', 'pendanaan')->first();
+        $laporanFile = $kegiatan->files->where('tahap', 'laporan')->first();
 
         return view('kegiatan.riwayat.show', compact('kegiatan', 'approvalsByTahap', 'proposalFile', 'rabFile', 'laporanFile'));
     }
@@ -470,10 +470,16 @@ class KegiatanController extends Controller
                     default => $currentTahap,
                 };
 
+                // Status: 'approved' jika laporan selesai, 'draft' untuk tahap lainnya pindah
+                $newStatus = ($currentTahap === 'laporan') ? 'approved' : 'draft';
+                
+                // current_approver_role: 'completed' jika laporan selesai, null untuk tahap lainnya
+                $newApproverRole = ($currentTahap === 'laporan') ? 'completed' : null;
+
                 $kegiatan->update([
                     'tahap' => $nextTahap,
-                    'status' => 'draft',
-                    'current_approver_role' => null,
+                    'status' => $newStatus,
+                    'current_approver_role' => $newApproverRole,
                 ]);
 
                 $tahapName = match($currentTahap) {
@@ -762,13 +768,9 @@ class KegiatanController extends Controller
                 'uploaded_at' => now(),
             ]);
 
-            // Update kegiatan status
-            // Karena sudah di tahap proposal (pindah otomatis saat usulan approved)
-            // Tinggal update status ke draft jika revision
-            if ($kegiatan->status === 'revision') {
-                $kegiatan->update(['status' => 'draft']);
-            }
-            // Jika status sudah draft, tidak perlu update
+            // Status tidak perlu diubah saat upload
+            // Status tetap 'draft' atau 'revision' sampai user klik Submit
+            // Ini penting agar approver masih bisa melihat kegiatan yang diminta revisi
 
             return redirect()->route('kegiatan.proposal.show', $kegiatan)
                 ->with('success', 'Proposal berhasil diupload! Silakan submit untuk proses persetujuan.');
@@ -881,12 +883,12 @@ class KegiatanController extends Controller
             // Pembina melihat semua pendanaan di prodi mereka (monitoring)
             $query->where('prodi_id', $user->prodi_id);
         } elseif ($user->isKaprodi()) {
-            // Kaprodi melihat pendanaan yang sudah di-approve pembina (current_approver_role IN kaprodi, wadek_iii, completed)
+            // Kaprodi melihat pendanaan yang sudah di-approve pembina (exclude completed - sudah pindah tahap)
             $query->where('prodi_id', $user->prodi_id)
-                ->whereIn('current_approver_role', ['kaprodi', 'wadek_iii', 'completed']);
+                ->whereIn('current_approver_role', ['kaprodi', 'wadek_iii']);
         } elseif ($user->isWadek()) {
-            // Wadek melihat pendanaan yang sudah di-approve kaprodi (current_approver_role IN wadek_iii, completed)
-            $query->whereIn('current_approver_role', ['wadek_iii', 'completed']);
+            // Wadek melihat pendanaan yang sudah di-approve kaprodi (exclude completed - sudah pindah tahap)
+            $query->where('current_approver_role', 'wadek_iii');
         } else {
             $kegiatans = collect();
             return view('kegiatan.pendanaan.index', compact('kegiatans'));
@@ -1034,18 +1036,10 @@ class KegiatanController extends Controller
                 'uploaded_at' => now(),
             ]);
 
-            // Update kegiatan
-            // Karena sudah di tahap pendanaan (pindah otomatis saat proposal approved)
-            // Update total anggaran dan status jika revisi
-            if ($kegiatan->status === 'revision') {
-                $kegiatan->update([
-                    'status' => 'draft',
-                    'total_anggaran' => $request->total_anggaran,
-                ]);
-            } else {
-                // Jika draft, hanya update total anggaran
-                $kegiatan->update(['total_anggaran' => $request->total_anggaran]);
-            }
+            // Update total anggaran
+            // Status tidak perlu diubah saat upload (tetap draft atau revision)
+            // Status baru berubah ke 'submitted' saat user klik tombol Submit
+            $kegiatan->update(['total_anggaran' => $request->total_anggaran]);
 
             return redirect()->route('kegiatan.pendanaan.show', $kegiatan)
                 ->with('success', 'File RAB berhasil diupload. Silakan submit untuk persetujuan.');
@@ -1155,25 +1149,20 @@ class KegiatanController extends Controller
 
         // Filter kegiatan tahap laporan berdasarkan role dan visibility
         if ($user->isHima()) {
-            // Hima melihat semua laporan yang dia buat
-            $query->where('user_id', $user->id);
+            // Hima melihat semua laporan yang dia buat (exclude completed)
+            $query->where('user_id', $user->id)
+                ->where('current_approver_role', '!=', 'completed');
         } elseif ($user->isPembina()) {
-            // Pembina melihat semua laporan prodi mereka
-            $query->where('prodi_id', $user->prodi_id);
-        } elseif ($user->isKaprodi()) {
-            // Kaprodi hanya melihat laporan yang sudah disetujui Pembina
+            // Pembina melihat semua laporan prodi mereka (exclude completed)
             $query->where('prodi_id', $user->prodi_id)
-                ->where(function($query) {
-                    $query->where('current_approver_role', 'kaprodi')
-                          ->orWhere('current_approver_role', 'wadek_iii')
-                          ->orWhere('current_approver_role', 'completed');
-                });
+                ->where('current_approver_role', '!=', 'completed');
+        } elseif ($user->isKaprodi()) {
+            // Kaprodi hanya melihat laporan yang sudah disetujui Pembina (exclude completed)
+            $query->where('prodi_id', $user->prodi_id)
+                ->whereIn('current_approver_role', ['kaprodi', 'wadek_iii']);
         } elseif ($user->isWadek()) {
-            // Wadek hanya melihat laporan yang sudah disetujui Kaprodi
-            $query->where(function($query) {
-                $query->where('current_approver_role', 'wadek_iii')
-                      ->orWhere('current_approver_role', 'completed');
-            });
+            // Wadek hanya melihat laporan yang sudah disetujui Kaprodi (exclude completed)
+            $query->where('current_approver_role', 'wadek_iii');
         } else {
             $kegiatans = collect();
             return view('kegiatan.laporan.index', compact('kegiatans'));
@@ -1297,10 +1286,8 @@ class KegiatanController extends Controller
                 'uploaded_by' => $user->id,
             ]);
 
-            // Update status jika revision
-            if ($kegiatan->status === 'revision') {
-                $kegiatan->update(['status' => 'draft']);
-            }
+            // Status tidak perlu diubah saat upload
+            // Status tetap 'draft' atau 'revision' sampai user klik Submit
 
             return redirect()->route('kegiatan.laporan.show', $kegiatan)
                 ->with('success', 'File LPJ berhasil diupload. Silakan submit untuk proses persetujuan.');
@@ -1327,19 +1314,32 @@ class KegiatanController extends Controller
             return redirect()->back()->with('error', 'Silakan upload file LPJ terlebih dahulu.');
         }
 
-        // Validate status
-        if ($kegiatan->status !== 'draft') {
+        // Validate status - allow draft or revision
+        if (!in_array($kegiatan->status, ['draft', 'revision'])) {
             return redirect()->back()->with('error', 'Laporan sudah disubmit.');
         }
 
         try {
-            $kegiatan->update([
-                'status' => 'submitted',
-                'current_approver_role' => 'pembina_hima',
-            ]);
+            $updateData = ['status' => 'submitted'];
+
+            if ($kegiatan->status === 'draft') {
+                $updateData['current_approver_role'] = 'pembina_hima';
+                $message = 'Laporan berhasil disubmit untuk persetujuan Pembina Hima.';
+            } else {
+                // Re-submit setelah revisi, current_approver_role tetap sama
+                $approverName = match ($kegiatan->current_approver_role) {
+                    'pembina_hima' => 'Pembina Hima',
+                    'kaprodi' => 'Kaprodi',
+                    'wadek_iii' => 'Wadek III',
+                    default => 'Approver',
+                };
+                $message = "Laporan berhasil disubmit ulang. Menunggu persetujuan {$approverName}.";
+            }
+
+            $kegiatan->update($updateData);
 
             return redirect()->route('kegiatan.laporan.show', $kegiatan)
-                ->with('success', 'Laporan berhasil disubmit untuk persetujuan Pembina Hima.');
+                ->with('success', $message);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal submit laporan: ' . $e->getMessage());
         }

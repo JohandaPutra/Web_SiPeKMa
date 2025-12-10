@@ -40,6 +40,7 @@ class Analytics extends Controller
       $laporan = Kegiatan::where('user_id', $user->id)
         ->where('tahap', 'laporan')
         ->where('status', '!=', 'rejected')
+        ->where('current_approver_role', '!=', 'completed')
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'rejected');
         })
@@ -70,6 +71,7 @@ class Analytics extends Controller
       $laporan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'laporan')
         ->where('status', '!=', 'rejected')
+        ->where('current_approver_role', '!=', 'completed')
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'rejected');
         })
@@ -96,18 +98,16 @@ class Analytics extends Controller
         ->count();
       $pendanaan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'pendanaan')
-        ->whereHas('approvalHistories', function($q) {
-          $q->where('approver_role', 'kaprodi')->where('tahap', 'pendanaan')->where('action', 'approved');
-        })
+        ->whereIn('current_approver_role', ['kaprodi', 'wadek_iii'])
+        ->where('status', '!=', 'rejected')
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'rejected');
         })
         ->count();
       $laporan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'laporan')
-        ->whereHas('approvalHistories', function($q) {
-          $q->where('approver_role', 'kaprodi')->where('tahap', 'laporan')->where('action', 'approved');
-        })
+        ->whereIn('current_approver_role', ['kaprodi', 'wadek_iii'])
+        ->where('status', '!=', 'rejected')
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'rejected');
         })
@@ -131,17 +131,15 @@ class Analytics extends Controller
         })
         ->count();
       $pendanaan = Kegiatan::where('tahap', 'pendanaan')
-        ->whereHas('approvalHistories', function($q) {
-          $q->where('approver_role', 'wadek_iii')->where('tahap', 'pendanaan')->where('action', 'approved');
-        })
+        ->where('current_approver_role', 'wadek_iii')
+        ->where('status', '!=', 'rejected')
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'rejected');
         })
         ->count();
       $laporan = Kegiatan::where('tahap', 'laporan')
-        ->whereHas('approvalHistories', function($q) {
-          $q->where('approver_role', 'wadek_iii')->where('tahap', 'laporan')->where('action', 'approved');
-        })
+        ->where('current_approver_role', 'wadek_iii')
+        ->where('status', '!=', 'rejected')
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'rejected');
         })
