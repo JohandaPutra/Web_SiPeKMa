@@ -137,7 +137,7 @@
                             <strong>{{ $kegiatan->nama_kegiatan }}</strong>
                         </td>
                         <td>
-                            <span class="badge bg-label-info">{{ ucfirst($kegiatan->jenis_kegiatan) }}</span>
+                            <span class="badge bg-label-info">{{ $kegiatan->jenisKegiatan->nama ?? '-' }}</span>
                         </td>
                         <td>
                             {{ \Carbon\Carbon::parse($kegiatan->tanggal_mulai)->format('d M Y') }}

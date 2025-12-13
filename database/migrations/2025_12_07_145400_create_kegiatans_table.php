@@ -27,7 +27,7 @@ return new class extends Migration
 
             // Workflow Status
             $table->enum('tahap', ['usulan', 'proposal', 'pendanaan', 'laporan'])->default('usulan');
-            $table->enum('status', ['draft', 'submitted', 'approved', 'revision', 'rejected'])->default('draft');
+            $table->enum('status', ['draft', 'dikirim', 'disetujui', 'revisi', 'ditolak'])->default('draft');
             $table->enum('current_approver_role', ['pembina_hima', 'kaprodi', 'wadek_iii', 'completed'])->nullable();
 
             $table->timestamps();

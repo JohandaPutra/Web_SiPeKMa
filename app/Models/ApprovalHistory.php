@@ -46,9 +46,9 @@ class ApprovalHistory extends Model
     public function getActionBadgeAttribute(): string
     {
         return match ($this->action) {
-            'approved' => 'success',
-            'revision' => 'warning',
-            'rejected' => 'danger',
+            'disetujui' => 'success',
+            'revisi' => 'warning',
+            'ditolak' => 'danger',
             default => 'secondary'
         };
     }

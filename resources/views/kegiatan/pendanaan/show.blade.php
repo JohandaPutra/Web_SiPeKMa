@@ -45,7 +45,7 @@
                 <div class="row mb-3">
                     <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Kegiatan:</strong></div>
                     <div class="col-12 col-sm-8">
-                        <span class="badge bg-label-info">{{ ucfirst($kegiatan->jenis_kegiatan) }}</span>
+                        <span class="badge bg-label-info">{{ $kegiatan->jenisKegiatan->nama ?? '-' }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -66,7 +66,7 @@
                 <div class="row mb-3">
                     <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Pendanaan:</strong></div>
                     <div class="col-12 col-sm-8">
-                        <span class="badge bg-label-primary">{{ ucfirst($kegiatan->jenis_pendanaan) }}</span>
+                        <span class="badge bg-label-primary">{{ $kegiatan->jenisPendanaan->nama ?? '-' }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -168,7 +168,7 @@
                     <div class="timeline-item mb-4">
                         <div class="d-flex align-items-start">
                             <div class="timeline-indicator timeline-indicator-{{ $history->actionBadge }}">
-                                <i class='bx bx-{{ $history->action == "approved" ? "check" : ($history->action == "revision" ? "revision" : "x") }}'></i>
+                                <i class='bx bx-{{ $history->action == "disetujui" ? "check" : ($history->action == "revisi" ? "revisi" : "x") }}'></i>
                             </div>
                             <div class="ms-3 flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
@@ -209,27 +209,27 @@
                 @php
                 // Cek approval histories untuk tahap pendanaan
                 $pendanaanApprovals = $kegiatan->approvalHistories->where('tahap', 'pendanaan');
-                $pendanaanApprovedCount = $pendanaanApprovals->where('action', 'approved')->count();
-                $pendanaanRejected = $pendanaanApprovals->where('action', 'rejected')->count() > 0;
-                $pendanaanRejectedHistory = $pendanaanRejected ? $pendanaanApprovals->where('action', 'rejected')->first() : null;
-                $pendanaanCompleted = $pendanaanApprovedCount >= 3 || ($kegiatan->tahap !== 'pendanaan' && !$pendanaanRejected);
-                $pendanaanRevision = $kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'revision';
-                $pendanaanSubmitted = $kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'submitted';
+                $pendanaanDisetujuiCount = $pendanaanApprovals->where('action', 'disetujui')->count();
+                $pendanaanDitolak = $pendanaanApprovals->where('action', 'ditolak')->count() > 0;
+                $pendanaanDitolakHistory = $pendanaanDitolak ? $pendanaanApprovals->where('action', 'ditolak')->first() : null;
+                $pendanaanCompleted = $pendanaanDisetujuiCount >= 3 || ($kegiatan->tahap !== 'pendanaan' && !$pendanaanDitolak);
+                $pendanaanRevisi = $kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'revisi';
+                $pendanaanDikirim = $kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'dikirim';
                 $pendanaanDraft = $kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'draft';
                 @endphp
 
-                @if($pendanaanRejected)
+                @if($pendanaanDitolak)
                 <div class="alert alert-danger">
                     <i class="bx bx-x-circle me-2"></i>
                     <strong>Pendanaan Ditolak</strong>
-                    @if($pendanaanRejectedHistory)
+                    @if($pendanaanDitolakHistory)
                     <p class="mb-0 mt-2">
-                        Ditolak oleh <strong>{{ $pendanaanRejectedHistory->approver->role->display_name }}</strong>
-                        pada {{ $pendanaanRejectedHistory->approved_at->format('d M Y H:i') }}
+                        Ditolak oleh <strong>{{ $pendanaanDitolakHistory->approver->role->display_name }}</strong>
+                        pada {{ $pendanaanDitolakHistory->approved_at->format('d M Y H:i') }}
                     </p>
-                    @if($pendanaanRejectedHistory->comment)
+                    @if($pendanaanDitolakHistory->comment)
                     <div class="alert alert-light mt-2 mb-0">
-                        <small><strong>Alasan:</strong> {{ $pendanaanRejectedHistory->comment }}</small>
+                        <small><strong>Alasan:</strong> {{ $pendanaanDitolakHistory->comment }}</small>
                     </div>
                     @endif
                     @else
@@ -246,7 +246,7 @@
                     <p class="mb-0 mt-2">Semua tahap persetujuan pendanaan telah selesai.</p>
                     @endif
                 </div>
-                @elseif($pendanaanRevision)
+                @elseif($pendanaanRevisi)
                 <div class="alert alert-warning">
                     <i class="bx bx-error me-2"></i>
                     <strong>Perlu Revisi</strong>
@@ -258,7 +258,7 @@
                     <strong>Draft</strong>
                     <p class="mb-0 mt-2">RAB belum disubmit.</p>
                 </div>
-                @elseif($pendanaanSubmitted)
+                @elseif($pendanaanDikirim)
                 <div class="alert alert-info">
                     <i class="bx bx-time me-2"></i>
                     <strong>Menunggu Persetujuan</strong>
@@ -278,19 +278,19 @@
                     <label class="form-label mb-2">Progress Approval Pendanaan:</label>
                     @php
                     // Hitung progress berdasarkan approval yang sudah ada untuk tahap pendanaan
-                    if ($pendanaanRejected) {
+                    if ($pendanaanDitolak) {
                         $progress = 0; // Ditolak, progress 0
                         $progressColor = 'danger';
-                    } elseif ($pendanaanApprovedCount >= 3 || ($kegiatan->tahap !== 'pendanaan' && !$pendanaanRejected)) {
+                    } elseif ($pendanaanDisetujuiCount >= 3 || ($kegiatan->tahap !== 'pendanaan' && !$pendanaanDitolak)) {
                         $progress = 100; // Semua approval selesai atau sudah pindah tahap
                         $progressColor = 'success';
-                    } elseif ($pendanaanApprovedCount == 2) {
+                    } elseif ($pendanaanDisetujuiCount == 2) {
                         $progress = 66; // Pembina + Kaprodi approved, menunggu Wadek
                         $progressColor = 'warning';
-                    } elseif ($pendanaanApprovedCount == 1) {
+                    } elseif ($pendanaanDisetujuiCount == 1) {
                         $progress = 33; // Pembina approved, menunggu Kaprodi
                         $progressColor = 'warning';
-                    } elseif ($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'submitted') {
+                    } elseif ($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'dikirim') {
                         $progress = 10; // Sudah submit, menunggu Pembina
                         $progressColor = 'info';
                     } else {
@@ -306,8 +306,8 @@
                     </div>
                     <small class="text-muted mt-2 d-block">
                         Pembina → Kaprodi → Wadek III
-                        @if($pendanaanApprovedCount > 0)
-                        ({{ $pendanaanApprovedCount }}/3 Approved)
+                        @if($pendanaanDisetujuiCount > 0)
+                        ({{ $pendanaanDisetujuiCount }}/3 Approved)
                         @endif
                     </small>
                 </div>
@@ -322,7 +322,7 @@
             </div>
             <div class="card-body">
                 <!-- Info jika pendanaan sudah selesai -->
-                @if($pendanaanCompleted && !$pendanaanRejected)
+                @if($pendanaanCompleted && !$pendanaanDitolak)
                 <div class="alert alert-success mb-2">
                     <strong><i class="bx bx-check-circle me-1"></i> Pendanaan Disetujui!</strong>
                     @if($kegiatan->tahap === 'laporan')
@@ -334,7 +334,7 @@
                     <p class="mb-2 small">Semua tahap persetujuan pendanaan telah selesai.</p>
                     @endif
                 </div>
-                @elseif($pendanaanRejected)
+                @elseif($pendanaanDitolak)
                 <div class="alert alert-danger mb-2">
                     <strong><i class="bx bx-x-circle me-1"></i> Pendanaan Ditolak</strong>
                     <p class="mb-2 small">Silakan periksa komentar reviewer untuk informasi lebih lanjut.</p>
@@ -342,7 +342,7 @@
                 @endif
 
                 <!-- Tombol aksi hanya muncul jika pendanaan masih aktif (belum selesai) -->
-                @if(!$pendanaanCompleted && !$pendanaanRejected)
+                @if(!$pendanaanCompleted && !$pendanaanDitolak)
                     @if($kegiatan->tahap === 'pendanaan' && !$rabFile)
                     <!-- Upload RAB pertama kali -->
                     <a href="{{ route('kegiatan.pendanaan.upload', $kegiatan) }}" class="btn btn-primary w-100 mb-2">
@@ -350,7 +350,7 @@
                     </a>
                     @endif
 
-                    @if($rabFile && in_array($kegiatan->status, ['draft', 'revision']))
+                    @if($rabFile && in_array($kegiatan->status, ['draft', 'revisi']))
                     <!-- Submit Button -->
                     <form action="{{ route('kegiatan.pendanaan.submit', $kegiatan) }}" method="POST" class="mb-2">
                         @csrf
@@ -361,8 +361,8 @@
                     </form>
 
                     <!-- Edit Button -->
-                    <a href="{{ route('kegiatan.pendanaan.upload', $kegiatan) }}" class="btn btn-{{ $kegiatan->status === 'revision' ? 'warning' : 'primary' }} w-100 mb-2">
-                        <i class="bx bx-edit me-1"></i> {{ $kegiatan->status === 'revision' ? 'Edit & Upload Ulang RAB' : 'Edit RAB' }}
+                    <a href="{{ route('kegiatan.pendanaan.upload', $kegiatan) }}" class="btn btn-{{ $kegiatan->status === 'revisi' ? 'warning' : 'primary' }} w-100 mb-2">
+                        <i class="bx bx-edit me-1"></i> {{ $kegiatan->status === 'revisi' ? 'Edit & Upload Ulang RAB' : 'Edit RAB' }}
                     </a>
 
                     <!-- Hapus Button (hanya untuk draft) -->
@@ -393,7 +393,7 @@
             !Auth::user()->isHima() &&
             $kegiatan->current_approver_role === Auth::user()->role->name &&
             $kegiatan->tahap === 'pendanaan' &&
-            $kegiatan->status === 'submitted'
+            $kegiatan->status === 'dikirim'
         )
         <div class="card mb-4">
             <div class="card-header">
@@ -403,8 +403,8 @@
                 <button type="button" class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#approveModal">
                     <i class="bx bx-check me-1"></i> Setujui
                 </button>
-                <button type="button" class="btn btn-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#revisionModal">
-                    <i class="bx bx-revision me-1"></i> Minta Revisi
+                <button type="button" class="btn btn-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#RevisiModal">
+                    <i class="bx bx-Revisi me-1"></i> Minta Revisi
                 </button>
                 <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
                     <i class="bx bx-x me-1"></i> Tolak
@@ -462,10 +462,10 @@
     </div>
 </div>
 
-<!-- Revision Modal -->
-<div class="modal fade" id="revisionModal" tabindex="-1" aria-hidden="true">
+<!-- Revisi Modal -->
+<div class="modal fade" id="RevisiModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <form action="{{ route('kegiatan.revision', $kegiatan) }}" method="POST">
+        <form action="{{ route('kegiatan.revisi', $kegiatan) }}" method="POST">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
@@ -491,7 +491,7 @@
 <!-- Reject Modal -->
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <form action="{{ route('kegiatan.reject', $kegiatan) }}" method="POST">
+        <form action="{{ route('kegiatan.tolak', $kegiatan) }}" method="POST">
             @csrf
             <div class="modal-content">
                 <div class="modal-header bg-danger">

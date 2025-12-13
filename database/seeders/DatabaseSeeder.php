@@ -14,7 +14,12 @@ class DatabaseSeeder extends Seeder
   public function run(): void
   {
     $this->call([
-      CompleteTestSeeder::class,
+      RoleSeeder::class,
+      ProdiSeeder::class,
+      JenisKegiatanSeeder::class,
+      JenisPendanaanSeeder::class,
+      AdminUserSeeder::class,
+      SistemInformasiTestSeeder::class, // Test data untuk 1 prodi dengan 12 kegiatan lengkap
     ]);
   }
 }

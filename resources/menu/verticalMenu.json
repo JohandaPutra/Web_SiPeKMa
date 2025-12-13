@@ -63,13 +63,73 @@
       ]
     },
     {
-      "menuHeader": "User Management"
+      "menuHeader": "Pengaturan",
+      "roles": [
+        "admin",
+        "wadek_iii"
+      ]
     },
     {
-      "url": "users",
-      "name": "Users",
-      "icon": "menu-icon tf-icons bx bx-user",
-      "slug": "users-index"
+      "name": "Kelola User",
+      "icon": "menu-icon tf-icons bx bx-user-circle",
+      "slug": "kelola-user",
+      "roles": [
+        "admin",
+        "wadek_iii"
+      ],
+      "submenu": [
+        {
+          "url": "prodi",
+          "name": "Program Studi",
+          "slug": [
+            "prodi.index",
+            "prodi.create",
+            "prodi.edit",
+            "prodi.show"
+          ]
+        },
+        {
+          "url": "users",
+          "name": "User",
+          "slug": [
+            "users.index",
+            "users.create",
+            "users.edit",
+            "users.show"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Kelola Kegiatan",
+      "icon": "menu-icon tf-icons bx bx-calendar-event",
+      "slug": "kelola-kegiatan",
+      "roles": [
+        "admin",
+        "wadek_iii"
+      ],
+      "submenu": [
+        {
+          "url": "jenis-kegiatan",
+          "name": "Jenis Kegiatan",
+          "slug": [
+            "jenis-kegiatan.index",
+            "jenis-kegiatan.create",
+            "jenis-kegiatan.edit",
+            "jenis-kegiatan.show"
+          ]
+        },
+        {
+          "url": "jenis-pendanaan",
+          "name": "Jenis Pendanaan",
+          "slug": [
+            "jenis-pendanaan.index",
+            "jenis-pendanaan.create",
+            "jenis-pendanaan.edit",
+            "jenis-pendanaan.show"
+          ]
+        }
+      ]
     }
   ]
 }

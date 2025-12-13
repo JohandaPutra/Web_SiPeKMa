@@ -45,7 +45,7 @@
                 <div class="row mb-3">
                     <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Kegiatan:</strong></div>
                     <div class="col-12 col-sm-8">
-                        <span class="badge bg-label-info">{{ ucfirst($kegiatan->jenis_kegiatan) }}</span>
+                        <span class="badge bg-label-info">{{ $kegiatan->jenisKegiatan->nama ?? '-' }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -66,7 +66,7 @@
                 <div class="row mb-3">
                     <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Pendanaan:</strong></div>
                     <div class="col-12 col-sm-8">
-                        <span class="badge bg-label-primary">{{ ucfirst($kegiatan->jenis_pendanaan) }}</span>
+                        <span class="badge bg-label-warning">{{ $kegiatan->jenisPendanaan->nama ?? '-' }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -98,7 +98,7 @@
                     <div class="timeline-item mb-4">
                         <div class="d-flex align-items-start">
                             <div class="timeline-indicator timeline-indicator-{{ $history->actionBadge }}">
-                                <i class='bx bx-{{ $history->action == "approved" ? "check" : ($history->action == "revision" ? "revision" : "x") }}'></i>
+                                <i class='bx bx-{{ $history->action == "disetujui" ? "check" : ($history->action == "revisi" ? "revisi" : "x") }}'></i>
                             </div>
                             <div class="ms-3 flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
@@ -139,13 +139,13 @@
                 @php
                 // Cek apakah usulan sudah disetujui semua level (pindah ke tahap selanjutnya)
                 $usulanApprovals = $kegiatan->approvalHistories->where('tahap', 'usulan');
-                $usulanApprovedCount = $usulanApprovals->where('action', 'approved')->count();
-                $usulanCompleted = $usulanApprovedCount >= 3 || $kegiatan->tahap !== 'usulan';
-                $usulanRejected = $usulanApprovals->where('action', 'rejected')->count() > 0;
-                $usulanRejectedHistory = $usulanRejected ? $usulanApprovals->where('action', 'rejected')->first() : null;
-                $usulanRevision = $usulanApprovals->where('action', 'revision')->count() > 0 &&
+                $usulanDisetujuiCount = $usulanApprovals->where('action', 'disetujui')->count();
+                $usulanCompleted = $usulanDisetujuiCount >= 3 || $kegiatan->tahap !== 'usulan';
+                $usulanDitolak = $usulanApprovals->where('action', 'ditolak')->count() > 0;
+                $usulanDitolakHistory = $usulanDitolak ? $usulanApprovals->where('action', 'ditolak')->first() : null;
+                $usulanRevisi = $usulanApprovals->where('action', 'revisi')->count() > 0 &&
                                   $kegiatan->tahap === 'usulan' &&
-                                  $kegiatan->status === 'revision';
+                                  $kegiatan->status === 'revisi';
                 @endphp
 
                 @if($usulanCompleted && $kegiatan->tahap !== 'usulan')
@@ -160,23 +160,23 @@
                     <strong>Usulan Disetujui!</strong>
                     <p class="mb-0 mt-2">Semua tahap persetujuan usulan telah selesai.</p>
                 </div>
-                @elseif($usulanRejected)
+                @elseif($usulanDitolak)
                 <div class="alert alert-danger">
                     <i class="bx bx-x-circle me-2"></i>
                     <strong>Usulan Ditolak</strong>
-                    @if($usulanRejectedHistory)
+                    @if($usulanDitolakHistory)
                     <p class="mb-0 mt-2">
-                        Ditolak oleh <strong>{{ $usulanRejectedHistory->approver->role->display_name }}</strong>
-                        pada {{ $usulanRejectedHistory->approved_at->format('d M Y H:i') }}
+                        Ditolak oleh <strong>{{ $usulanDitolakHistory->approver->role->display_name }}</strong>
+                        pada {{ $usulanDitolakHistory->approved_at->format('d M Y H:i') }}
                     </p>
-                    @if($usulanRejectedHistory->comment)
+                    @if($usulanDitolakHistory->comment)
                     <div class="alert alert-light mt-2 mb-0">
-                        <small><strong>Alasan:</strong> {{ $usulanRejectedHistory->comment }}</small>
+                        <small><strong>Alasan:</strong> {{ $usulanDitolakHistory->comment }}</small>
                     </div>
                     @endif
                     @endif
                 </div>
-                @elseif($usulanRevision)
+                @elseif($usulanRevisi)
                 <div class="alert alert-warning">
                     <i class="bx bx-error me-2"></i>
                     <strong>Perlu Revisi</strong>
@@ -188,7 +188,7 @@
                     <strong>Draft</strong>
                     <p class="mb-0 mt-2">Usulan belum disubmit.</p>
                 </div>
-                @elseif($kegiatan->status === 'submitted' && $kegiatan->tahap === 'usulan')
+                @elseif($kegiatan->status === 'dikirim' && $kegiatan->tahap === 'usulan')
                 <div class="alert alert-info">
                     <i class="bx bx-time me-2"></i>
                     <strong>Menunggu Persetujuan</strong>
@@ -214,16 +214,16 @@
                     <label class="form-label mb-2">Progress Approval Usulan:</label>
                     @php
                     // Hitung progress berdasarkan approval yang sudah ada untuk tahap usulan
-                    $usulanApprovals = $kegiatan->approvalHistories->where('tahap', 'usulan')->where('action', 'approved');
-                    $approvedCount = $usulanApprovals->count();
+                    $usulanApprovals = $kegiatan->approvalHistories->where('tahap', 'usulan')->where('action', 'disetujui');
+                    $disetujuiCount = $usulanApprovals->count();
 
-                    if ($approvedCount >= 3 || $kegiatan->tahap !== 'usulan') {
+                    if ($disetujuiCount >= 3 || $kegiatan->tahap !== 'usulan') {
                         $progress = 100; // Semua approval selesai atau sudah pindah tahap
-                    } elseif ($approvedCount == 2) {
+                    } elseif ($disetujuiCount == 2) {
                         $progress = 66; // Pembina + Kaprodi approved, menunggu Wadek
-                    } elseif ($approvedCount == 1) {
+                    } elseif ($disetujuiCount == 1) {
                         $progress = 33; // Pembina approved, menunggu Kaprodi
-                    } elseif ($kegiatan->status === 'submitted') {
+                    } elseif ($kegiatan->status === 'dikirim') {
                         $progress = 10; // Sudah submit, menunggu Pembina
                     } else {
                         $progress = 0; // Draft
@@ -237,8 +237,8 @@
                     </div>
                     <small class="text-muted mt-2 d-block">
                         Pembina → Kaprodi → Wadek III
-                        @if($approvedCount > 0)
-                        ({{ $approvedCount }}/3 Approved)
+                        @if($disetujuiCount > 0)
+                        ({{ $disetujuiCount }}/3 Disetujui)
                         @endif
                     </small>
                 </div>
@@ -254,10 +254,10 @@
             <div class="card-body">
                 @php
                 // Hitung approval count untuk cek status usulan
-                $usulanApprovedHistories = $kegiatan->approvalHistories->where('tahap', 'usulan')->where('action', 'approved');
-                $approvedCount = $usulanApprovedHistories->count();
+                $usulanDisetujuiHistories = $kegiatan->approvalHistories->where('tahap', 'usulan')->where('action', 'disetujui');
+                $disetujuiCount = $usulanDisetujuiHistories->count();
                 // Cek apakah usulan sudah selesai (ada approval atau sudah pindah tahap)
-                $usulanSelesai = $approvedCount >= 3 || $kegiatan->tahap !== 'usulan';
+                $usulanSelesai = $disetujuiCount >= 3 || $kegiatan->tahap !== 'usulan';
                 @endphp
 
                 <!-- Info dan tombol jika usulan sudah pindah ke tahap proposal -->
@@ -271,8 +271,8 @@
                 </div>
                 @endif
 
-                <!-- Tombol untuk status draft atau revision -->
-                @if($kegiatan->tahap === 'usulan' && in_array($kegiatan->status, ['draft', 'revision']))
+                <!-- Tombol untuk status draft atau Revisi -->
+                @if($kegiatan->tahap === 'usulan' && in_array($kegiatan->status, ['draft', 'revisi']))
                 <!-- Submit Button -->
                 <form action="{{ route('kegiatan.submit', $kegiatan) }}" method="POST" class="mb-2">
                     @csrf
@@ -311,7 +311,7 @@
         @if(
             !Auth::user()->isHima() &&
             $kegiatan->current_approver_role === Auth::user()->role->name &&
-            $kegiatan->status === 'submitted'
+            $kegiatan->status === 'dikirim'
         )
         <div class="card mb-4">
             <div class="card-header">
@@ -323,9 +323,9 @@
                     <i class="bx bx-check me-1"></i> Setujui
                 </button>
 
-                <!-- Revision Button -->
-                <button type="button" class="btn btn-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#revisionModal">
-                    <i class="bx bx-revision me-1"></i> Minta Revisi
+                <!-- Revisi Button -->
+                <button type="button" class="btn btn-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#RevisiModal">
+                    <i class="bx bx-Revisi me-1"></i> Minta Revisi
                 </button>
 
                 <!-- Reject Button -->
@@ -385,10 +385,10 @@
     </div>
 </div>
 
-<!-- Revision Modal -->
-<div class="modal fade" id="revisionModal" tabindex="-1" aria-hidden="true">
+<!-- Revisi Modal -->
+<div class="modal fade" id="RevisiModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <form action="{{ route('kegiatan.revision', $kegiatan) }}" method="POST">
+        <form action="{{ route('kegiatan.revisi', $kegiatan) }}" method="POST">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
@@ -414,7 +414,7 @@
 <!-- Reject Modal -->
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <form action="{{ route('kegiatan.reject', $kegiatan) }}" method="POST">
+        <form action="{{ route('kegiatan.tolak', $kegiatan) }}" method="POST">
             @csrf
             <div class="modal-content">
                 <div class="modal-header bg-danger">

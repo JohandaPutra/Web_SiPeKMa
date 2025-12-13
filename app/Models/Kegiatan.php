@@ -16,11 +16,11 @@ class Kegiatan extends Model
         'prodi_id',
         'nama_kegiatan',
         'deskripsi_kegiatan',
-        'jenis_kegiatan',
+        'jenis_kegiatan_id',
         'tempat_kegiatan',
         'tanggal_mulai',
         'tanggal_akhir',
-        'jenis_pendanaan',
+        'jenis_pendanaan_id',
         'total_anggaran',
         'tahap',
         'status',
@@ -66,6 +66,22 @@ class Kegiatan extends Model
     }
 
     /**
+     * Get jenis kegiatan
+     */
+    public function jenisKegiatan(): BelongsTo
+    {
+        return $this->belongsTo(JenisKegiatan::class, 'jenis_kegiatan_id');
+    }
+
+    /**
+     * Get jenis pendanaan
+     */
+    public function jenisPendanaan(): BelongsTo
+    {
+        return $this->belongsTo(JenisPendanaan::class, 'jenis_pendanaan_id');
+    }
+
+    /**
      * Get file for specific tahap
      */
     public function getFileByTahap(string $tahap): ?KegiatanFile
@@ -80,10 +96,10 @@ class Kegiatan extends Model
     {
         return match ($this->status) {
             'draft' => 'secondary',
-            'submitted' => 'info',
-            'revision' => 'warning',
-            'approved' => 'success',
-            'rejected' => 'danger',
+            'dikirim' => 'info',
+            'revisi' => 'warning',
+            'disetujui' => 'success',
+            'ditolak' => 'danger',
             default => 'secondary'
         };
     }

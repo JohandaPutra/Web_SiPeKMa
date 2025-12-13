@@ -32,7 +32,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <div class="flex-shrink-0">
-                        @if($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'revision')
+                        @if($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'revisi')
                         <span class="badge bg-warning p-3">
                             <i class="bx bx-error" style="font-size: 1.5rem;"></i>
                         </span>
@@ -51,25 +51,25 @@
                     </div>
                 </div>
 
-                @if($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'revision' && $lastRevision)
+                @if($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'revisi' && $lastRevisi)
                 <div class="alert alert-warning">
                     <h6 class="alert-heading">
                         <i class="bx bx-error-circle me-1"></i> Revisi Diperlukan
                     </h6>
                     <div class="mb-2">
-                        <strong>Dari:</strong> {{ $lastRevision->approver->username }}
-                        ({{ match($lastRevision->approver->role->role_name) {
+                        <strong>Dari:</strong> {{ $lastRevisi->approver->username }}
+                        ({{ match($lastRevisi->approver->role->role_name) {
                             'pembina_hima' => 'Pembina Hima',
                             'kaprodi' => 'Kaprodi',
                             'wadek_iii' => 'Wadek III',
-                            default => $lastRevision->approver->role->role_name
+                            default => $lastRevisi->approver->role->role_name
                         } }})
                     </div>
                     <div class="mb-0">
                         <strong>Catatan:</strong><br>
-                        {{ $lastRevision->comment }}
+                        {{ $lastRevisi->comment }}
                     </div>
-                    <small class="text-muted">{{ $lastRevision->created_at->diffForHumans() }}</small>
+                    <small class="text-muted">{{ $lastRevisi->created_at->diffForHumans() }}</small>
                 </div>
                 @endif
 

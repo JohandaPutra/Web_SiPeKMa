@@ -65,14 +65,14 @@
                             <strong>{{ $kegiatan->nama_kegiatan }}</strong>
                             <br><small class="text-muted">{{ Str::limit($kegiatan->deskripsi_kegiatan, 50) }}</small>
                         </td>
-                        <td><span class="badge bg-label-info">{{ $kegiatan->jenis_kegiatan }}</span></td>
+                        <td><span class="badge bg-label-info">{{ $kegiatan->jenisKegiatan->nama ?? '-' }}</span></td>
                         <td>
                             <small>
                                 {{ $kegiatan->tanggal_mulai->format('d M Y') }}<br>
                                 s/d {{ $kegiatan->tanggal_akhir->format('d M Y') }}
                             </small>
                         </td>
-                        <td><span class="badge bg-label-primary">{{ ucfirst($kegiatan->jenis_pendanaan) }}</span></td>
+                        <td><span class="badge bg-label-primary">{{ $kegiatan->jenisPendanaan->nama ?? '-' }}</span></td>
                         <td>
                             @if($kegiatan->total_anggaran)
                             <strong class="text-success">Rp {{ number_format($kegiatan->total_anggaran, 0, ',', '.') }}</strong>

@@ -14,7 +14,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb breadcrumb-style1 mb-0">
                 <li class="breadcrumb-item">
-                    <a href="javascript:void(0);" class="text-muted">Dashboard</a>
+                    <a href="{{ route('dashboard-analytics') }}" class="text-muted">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item active">Users</li>
             </ol>
@@ -39,7 +39,7 @@
                     <!-- Tombol export -->
                     <div id="export-buttons"></div>
                     <!-- Tombol Add New User -->
-                    <a href="#" id="add-new-user-btn" class="btn btn-primary btn-sm">
+                    <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
                         <i class="bx bx-plus me-1"></i>
                         <span class="d-none d-sm-inline-block">Add User</span>
                     </a>
@@ -59,10 +59,11 @@
                 <thead>
                     <tr>
                         <th>#</th>
+                        <th>Nama</th>
                         <th>Username</th>
                         <th>Email</th>
-                        <th>Created At</th>
-                        <th>Updated At</th>
+                        <th>Role</th>
+                        <th>Prodi</th>
                         <th class="text-center">Actions</th>
                     </tr>
                 </thead>
@@ -70,10 +71,13 @@
                     @foreach ($users as $user)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
+                            <td>{{ $user->name }}</td>
                             <td>{{ $user->username }}</td>
                             <td>{{ $user->email }}</td>
-                            <td>{{ $user->created_at }}</td>
-                            <td>{{ $user->updated_at }}</td>
+                            <td>
+                                <span class="badge bg-label-primary">{{ $user->role->name ?? '-' }}</span>
+                            </td>
+                            <td>{{ $user->prodi->nama_prodi ?? '-' }}</td>
                             <td class="text-center">
                                 <div class="dropdown">
                                     <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
@@ -81,10 +85,18 @@
                                         <i class="bx bx-dots-vertical-rounded"></i>
                                     </button>
                                     <div class="dropdown-menu">
-                                        <a class="dropdown-item" href="javascript:void(0);"><i
-                                                class="bx bx-edit-alt me-1"></i> Edit</a>
-                                        <a class="dropdown-item" href="javascript:void(0);"><i class="bx bx-trash me-1"></i>
-                                            Delete</a>
+                                        <a class="dropdown-item" href="{{ route('users.edit', $user->id) }}">
+                                            <i class="bx bx-edit-alt me-1"></i> Edit
+                                        </a>
+                                        <form action="{{ route('users.destroy', $user->id) }}" method="POST"
+                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?');"
+                                            class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bx bx-trash me-1"></i> Delete
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </td>
@@ -152,15 +164,6 @@
             // Kostum style untuk select
             $('.dataTables_wrapper .dataTables_filter input').addClass('form-control form-control-sm ms-2');
             $('.dataTables_wrapper .dataTables_length select').addClass('form-select form-select-sm');
-
-
-            // Tambahkan event listener untuk tombol Add New User di card header
-            $('#add-new-user-btn').on('click', function() {
-                // Redirect to create page atau open modal
-                window.location.href = "#";
-                // Atau bisa juga membuka modal jika diperlukan
-                // $('#addNewUserModal').modal('show');
-            });
         });
     </script>
 @endpush

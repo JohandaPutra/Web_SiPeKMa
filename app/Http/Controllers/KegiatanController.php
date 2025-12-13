@@ -19,10 +19,13 @@ class KegiatanController extends Controller
         $user = Auth::user();
 
         // Base query dengan eager loading
-        $query = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files']);
+        $query = Kegiatan::with(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories.approver', 'files']);
 
         // Filter berdasarkan role
-        if ($user->isHima() || $user->isPembina() || $user->isKaprodi()) {
+        if ($user->isSuperAdmin()) {
+            // Super Admin melihat SEMUA kegiatan dari SEMUA prodi
+            // Tidak ada filter prodi_id
+        } elseif ($user->isHima() || $user->isPembina() || $user->isKaprodi()) {
             // Hima, Pembina, dan Kaprodi melihat semua kegiatan di prodi mereka
             $query->where('prodi_id', $user->prodi_id);
         } elseif ($user->isWadek()) {
@@ -58,9 +61,9 @@ class KegiatanController extends Controller
             $kegiatans = $query->paginate((int)$perPage)->appends(request()->query());
         }
 
-        // Ambil list prodi untuk filter (hanya untuk Wadek III)
+        // Ambil list prodi untuk filter (untuk Super Admin dan Wadek III)
         $prodis = collect();
-        if ($user->isWadek()) {
+        if ($user->isSuperAdmin() || $user->isWadek()) {
             $prodis = \App\Models\Prodi::orderBy('nama_prodi')->get();
         }
 
@@ -74,16 +77,17 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Validasi akses - Hima, Pembina, Kaprodi hanya bisa lihat kegiatan di prodi mereka
-        if ($user->isHima() || $user->isPembina() || $user->isKaprodi()) {
-            if ($kegiatan->prodi_id !== $user->prodi_id) {
-                abort(403, 'Unauthorized');
+        // Super Admin & Wadek III can access all, others restricted by prodi
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if ($user->isHima() || $user->isPembina() || $user->isKaprodi()) {
+                if ($kegiatan->prodi_id !== $user->prodi_id) {
+                    abort(403, 'Anda tidak memiliki akses ke kegiatan prodi ini.');
+                }
             }
         }
-        // Wadek III bisa lihat semua
 
         // Load semua relasi
-        $kegiatan->load(['user', 'prodi', 'approvalHistories.approver', 'files']);
+        $kegiatan->load(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories.approver', 'files']);
 
         // Group approval histories by tahap
         $approvalsByTahap = $kegiatan->approvalHistories->groupBy('tahap');
@@ -98,42 +102,50 @@ class KegiatanController extends Controller
 
     /**
      * Display a listing of the resource (Usulan only).
+     * PENTING: Hanya tampilkan usulan yang BELUM selesai disetujui
+     * Usulan yang sudah disetujui penuh akan pindah ke tahap proposal (otomatis)
      */
     public function index()
     {
         $user = Auth::user();
 
-        // Base query - exclude rejected kegiatan
-        $query = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver'])
+        // Base query - HANYA usulan yang belum selesai
+        // Exclude: ditolak DAN disetujui (sudah pindah ke proposal)
+        $query = Kegiatan::with(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories.approver'])
             ->where('tahap', 'usulan')
-            ->where('status', '!=', 'rejected')
+            ->whereNotIn('status', ['ditolak', 'disetujui']) // Yang disetujui sudah pindah tahap
             ->whereDoesntHave('approvalHistories', function($q) {
-                $q->where('action', 'rejected');
+                $q->where('action', 'ditolak');
             });
 
         // Filter kegiatan tahap usulan saja
-        if ($user->isHima()) {
-            // Hima melihat usulan yang dia buat (semua status)
+        if ($user->isSuperAdmin()) {
+            // Super Admin melihat SEMUA usulan dari SEMUA prodi yang masih dalam proses
+            // No additional filter needed
+        } elseif ($user->isHima()) {
+            // Hima melihat usulan yang dia buat (draft, dikirim, revisi)
             $query->where('user_id', $user->id);
         } elseif ($user->isPembina()) {
             // Pembina melihat usulan prodi mereka yang sudah disubmit (tidak termasuk draft)
             $query->where('prodi_id', $user->prodi_id)
-                ->whereIn('status', ['submitted', 'revision']);
+                ->whereIn('status', ['dikirim', 'revisi']);
         } elseif ($user->isKaprodi()) {
-            // Kaprodi melihat usulan prodi mereka yang sudah disetujui pembina
+            // Kaprodi melihat usulan prodi mereka yang sudah disetujui pembina (menunggu approval kaprodi)
             $query->where('prodi_id', $user->prodi_id)
+                ->where('status', 'dikirim')
                 ->whereHas('approvalHistories', function($q) {
                     $q->where('approver_role', 'pembina_hima')
                       ->where('tahap', 'usulan')
-                      ->where('action', 'approved');
+                      ->where('action', 'disetujui');
                 });
         } elseif ($user->isWadek()) {
-            // Wadek melihat usulan yang sudah disetujui kaprodi
-            $query->whereHas('approvalHistories', function($q) {
-                $q->where('approver_role', 'kaprodi')
-                  ->where('tahap', 'usulan')
-                  ->where('action', 'approved');
-            });
+            // Wadek melihat usulan yang sudah disetujui kaprodi (menunggu approval wadek)
+            $query->where('status', 'dikirim')
+                ->whereHas('approvalHistories', function($q) {
+                    $q->where('approver_role', 'kaprodi')
+                      ->where('tahap', 'usulan')
+                      ->where('action', 'disetujui');
+                });
         } else {
             $kegiatans = collect();
             return view('kegiatan.index', compact('kegiatans'));
@@ -155,40 +167,50 @@ class KegiatanController extends Controller
 
     /**
      * Display a listing of proposals only.
+     * PENTING: Hanya tampilkan proposal yang BELUM selesai disetujui
+     * Proposal yang sudah disetujui penuh akan pindah ke tahap pendanaan (otomatis)
      */
     public function indexProposal()
     {
         $user = Auth::user();
 
-        // Base query - exclude rejected kegiatan
-        $query = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
+        // Base query - HANYA proposal yang belum selesai
+        // Exclude: ditolak DAN disetujui (sudah pindah ke pendanaan)
+        $query = Kegiatan::with(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories.approver', 'files'])
             ->where('tahap', 'proposal')
-            ->where('status', '!=', 'rejected')
+            ->whereNotIn('status', ['ditolak', 'disetujui']) // Yang disetujui sudah pindah tahap
             ->whereDoesntHave('approvalHistories', function($q) {
-                $q->where('action', 'rejected');
+                $q->where('action', 'ditolak');
             });
 
         // Filter kegiatan tahap proposal berdasarkan role dan visibility
-        if ($user->isHima()) {
-            // Hima melihat semua proposal yang dia buat
+        if ($user->isSuperAdmin()) {
+            // Super Admin melihat SEMUA proposal dari SEMUA prodi yang masih dalam proses
+            // No additional filter needed
+        } elseif ($user->isHima()) {
+            // Hima melihat semua proposal yang dia buat (draft, dikirim, revisi)
             $query->where('user_id', $user->id);
         } elseif ($user->isPembina()) {
-            // Pembina melihat semua proposal prodi mereka (termasuk draft untuk progress)
-            $query->where('prodi_id', $user->prodi_id);
-        } elseif ($user->isKaprodi()) {
-            // Kaprodi hanya melihat proposal yang sudah disetujui Pembina
+            // Pembina melihat proposal prodi mereka yang sudah disubmit (tidak termasuk draft)
             $query->where('prodi_id', $user->prodi_id)
-                ->where(function($query) {
-                    $query->where('current_approver_role', 'kaprodi')
-                          ->orWhere('current_approver_role', 'wadek_iii')
-                          ->orWhere('current_approver_role', 'completed');
+                ->whereIn('status', ['dikirim', 'revisi']);
+        } elseif ($user->isKaprodi()) {
+            // Kaprodi melihat proposal yang sudah disetujui Pembina (menunggu approval kaprodi)
+            $query->where('prodi_id', $user->prodi_id)
+                ->where('status', 'dikirim')
+                ->whereHas('approvalHistories', function($q) {
+                    $q->where('approver_role', 'pembina_hima')
+                      ->where('tahap', 'proposal')
+                      ->where('action', 'disetujui');
                 });
         } elseif ($user->isWadek()) {
-            // Wadek hanya melihat proposal yang sudah disetujui Kaprodi
-            $query->where(function($query) {
-                $query->where('current_approver_role', 'wadek_iii')
-                      ->orWhere('current_approver_role', 'completed');
-            });
+            // Wadek melihat proposal yang sudah disetujui Kaprodi (menunggu approval wadek)
+            $query->where('status', 'dikirim')
+                ->whereHas('approvalHistories', function($q) {
+                    $q->where('approver_role', 'kaprodi')
+                      ->where('tahap', 'proposal')
+                      ->where('action', 'disetujui');
+                });
         } else {
             $kegiatans = collect();
             return view('kegiatan.proposal.index', compact('kegiatans'));
@@ -218,7 +240,10 @@ class KegiatanController extends Controller
             abort(403, 'Hanya Hima yang dapat membuat usulan kegiatan.');
         }
 
-        return view('kegiatan.create');
+        $jenisKegiatans = \App\Models\JenisKegiatan::where('is_active', true)->get();
+        $jenisPendanaans = \App\Models\JenisPendanaan::where('is_active', true)->get();
+
+        return view('kegiatan.create', compact('jenisKegiatans', 'jenisPendanaans'));
     }
 
     /**
@@ -235,9 +260,9 @@ class KegiatanController extends Controller
         $request->validate([
             'nama_kegiatan' => 'required|string|max:255',
             'deskripsi_kegiatan' => 'required|string',
-            'jenis_kegiatan' => 'required|in:seminar,workshop,pelatihan,lomba,lainnya',
+            'jenis_kegiatan_id' => 'required|exists:jenis_kegiatans,id',
             'tempat_kegiatan' => 'required|string|max:255',
-            'jenis_pendanaan' => 'required|in:mandiri,sponsor,hibah,internal',
+            'jenis_pendanaan_id' => 'required|exists:jenis_pendanaans,id',
             'tanggal_mulai' => 'required|date',
             'tanggal_akhir' => 'required|date|after_or_equal:tanggal_mulai',
         ]);
@@ -248,9 +273,9 @@ class KegiatanController extends Controller
                 'prodi_id' => $user->prodi_id,
                 'nama_kegiatan' => $request->nama_kegiatan,
                 'deskripsi_kegiatan' => $request->deskripsi_kegiatan,
-                'jenis_kegiatan' => $request->jenis_kegiatan,
+                'jenis_kegiatan_id' => $request->jenis_kegiatan_id,
                 'tempat_kegiatan' => $request->tempat_kegiatan,
-                'jenis_pendanaan' => $request->jenis_pendanaan,
+                'jenis_pendanaan_id' => $request->jenis_pendanaan_id,
                 'tanggal_mulai' => $request->tanggal_mulai,
                 'tanggal_akhir' => $request->tanggal_akhir,
                 'tahap' => 'usulan',
@@ -274,16 +299,18 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Check permission
-        if ($user->isHima() && $kegiatan->user_id !== $user->id) {
-            abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
+        // Check permission - Super Admin & Wadek III can access all
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if ($user->isHima() && $kegiatan->user_id !== $user->id) {
+                abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
+            }
+
+            if (($user->isPembina() || $user->isKaprodi()) && $kegiatan->prodi_id !== $user->prodi_id) {
+                abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
+            }
         }
 
-        if (($user->isPembina() || $user->isKaprodi()) && $kegiatan->prodi_id !== $user->prodi_id) {
-            abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
-        }
-
-        $kegiatan->load(['user', 'prodi', 'approvalHistories.approver.role']);
+        $kegiatan->load(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories.approver.role']);
 
         return view('kegiatan.show', compact('kegiatan'));
     }
@@ -295,17 +322,22 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Hanya Hima pemilik yang bisa edit, dan hanya saat draft atau revision
-        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-            abort(403, 'Anda tidak memiliki akses untuk mengedit kegiatan ini.');
+        // Super Admin & Wadek III can edit all, otherwise only HIMA who owns it
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+                abort(403, 'Anda tidak memiliki akses untuk mengedit kegiatan ini.');
+            }
         }
 
-        if (!in_array($kegiatan->status, ['draft', 'revision'])) {
+        if (!in_array($kegiatan->status, ['draft', 'revisi'])) {
             return redirect()->route('kegiatan.show', $kegiatan)
                 ->with('error', 'Kegiatan tidak dapat diedit karena sudah dalam proses persetujuan.');
         }
 
-        return view('kegiatan.edit', compact('kegiatan'));
+        $jenisKegiatans = \App\Models\JenisKegiatan::where('is_active', true)->get();
+        $jenisPendanaans = \App\Models\JenisPendanaan::where('is_active', true)->get();
+
+        return view('kegiatan.edit', compact('kegiatan', 'jenisKegiatans', 'jenisPendanaans'));
     }
 
     /**
@@ -315,11 +347,14 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengedit kegiatan ini.');
+        // Super Admin & Wadek III can update all, otherwise only HIMA who owns it
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengedit kegiatan ini.');
+            }
         }
 
-        if (!in_array($kegiatan->status, ['draft', 'revision'])) {
+        if (!in_array($kegiatan->status, ['draft', 'revisi'])) {
             return redirect()->route('kegiatan.show', $kegiatan)
                 ->with('error', 'Kegiatan tidak dapat diedit karena sudah dalam proses persetujuan.');
         }
@@ -327,9 +362,9 @@ class KegiatanController extends Controller
         $request->validate([
             'nama_kegiatan' => 'required|string|max:255',
             'deskripsi_kegiatan' => 'required|string',
-            'jenis_kegiatan' => 'required|in:seminar,workshop,pelatihan,lomba,lainnya',
+            'jenis_kegiatan_id' => 'required|exists:jenis_kegiatans,id',
             'tempat_kegiatan' => 'required|string|max:255',
-            'jenis_pendanaan' => 'required|in:mandiri,sponsor,hibah,internal',
+            'jenis_pendanaan_id' => 'required|exists:jenis_pendanaans,id',
             'tanggal_mulai' => 'required|date',
             'tanggal_akhir' => 'required|date|after_or_equal:tanggal_mulai',
         ]);
@@ -338,9 +373,9 @@ class KegiatanController extends Controller
             $kegiatan->update([
                 'nama_kegiatan' => $request->nama_kegiatan,
                 'deskripsi_kegiatan' => $request->deskripsi_kegiatan,
-                'jenis_kegiatan' => $request->jenis_kegiatan,
+                'jenis_kegiatan_id' => $request->jenis_kegiatan_id,
                 'tempat_kegiatan' => $request->tempat_kegiatan,
-                'jenis_pendanaan' => $request->jenis_pendanaan,
+                'jenis_pendanaan_id' => $request->jenis_pendanaan_id,
                 'tanggal_mulai' => $request->tanggal_mulai,
                 'tanggal_akhir' => $request->tanggal_akhir,
             ]);
@@ -361,9 +396,11 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Hanya Hima pemilik yang bisa delete, dan hanya saat draft
-        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus kegiatan ini.');
+        // Super Admin & Wadek III can delete all, otherwise only HIMA who owns it
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus kegiatan ini.');
+            }
         }
 
         if ($kegiatan->status !== 'draft') {
@@ -387,17 +424,20 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
+        // Super Admin & Wadek III can submit all, otherwise only HIMA who owns it
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
+            }
         }
 
-        if (!in_array($kegiatan->status, ['draft', 'revision'])) {
+        if (!in_array($kegiatan->status, ['draft', 'revisi'])) {
             return redirect()->back()->with('error', 'Kegiatan sudah disubmit.');
         }
 
         // Jika status revision, current_approver_role sudah di-set (tetap ke yang request revision)
         // Jika draft baru, mulai dari pembina_hima
-        $updateData = ['status' => 'submitted'];
+        $updateData = ['status' => 'dikirim'];
 
         if ($kegiatan->status === 'draft') {
             // Submit pertama kali, mulai dari pembina
@@ -444,7 +484,7 @@ class KegiatanController extends Controller
                 'approver_user_id' => $user->id,
                 'approver_role' => $userRole,
                 'tahap' => $kegiatan->tahap,
-                'action' => 'approved',
+                'action' => 'disetujui',
                 'comment' => $request->comment,
                 'approved_at' => now(),
             ]);
@@ -470,9 +510,9 @@ class KegiatanController extends Controller
                     default => $currentTahap,
                 };
 
-                // Status: 'approved' jika laporan selesai, 'draft' untuk tahap lainnya pindah
-                $newStatus = ($currentTahap === 'laporan') ? 'approved' : 'draft';
-                
+                // Status: 'disetujui' jika laporan selesai, 'draft' untuk tahap lainnya pindah
+                $newStatus = ($currentTahap === 'laporan') ? 'disetujui' : 'draft';
+
                 // current_approver_role: 'completed' jika laporan selesai, null untuk tahap lainnya
                 $newApproverRole = ($currentTahap === 'laporan') ? 'completed' : null;
 
@@ -551,9 +591,9 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Request revision (untuk Pembina, Kaprodi, Wadek)
+     * Request revisi (untuk Pembina, Kaprodi, Wadek)
      */
-    public function revision(Request $request, Kegiatan $kegiatan)
+    public function revisi(Request $request, Kegiatan $kegiatan)
     {
         $user = Auth::user();
         $userRole = $user->role->name;
@@ -579,7 +619,7 @@ class KegiatanController extends Controller
                 'approver_user_id' => $user->id,
                 'approver_role' => $userRole,
                 'tahap' => $kegiatan->tahap,
-                'action' => 'revision',
+                'action' => 'revisi',
                 'comment' => $request->comment,
                 'approved_at' => now(),
             ]);
@@ -587,7 +627,7 @@ class KegiatanController extends Controller
             // Update kegiatan status - kembali ke Hima untuk revisi
             // current_approver_role tetap sama (akan kembali ke role yang request revision)
             $kegiatan->update([
-                'status' => 'revision',
+                'status' => 'revisi',
             ]);
 
             // Redirect ke halaman sesuai tahap kegiatan
@@ -607,9 +647,9 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Reject kegiatan (untuk Pembina, Kaprodi, Wadek)
+     * Tolak kegiatan (untuk Pembina, Kaprodi, Wadek)
      */
-    public function reject(Request $request, Kegiatan $kegiatan)
+    public function tolak(Request $request, Kegiatan $kegiatan)
     {
         $user = Auth::user();
         $userRole = $user->role->name;
@@ -635,14 +675,14 @@ class KegiatanController extends Controller
                 'approver_user_id' => $user->id,
                 'approver_role' => $userRole,
                 'tahap' => $kegiatan->tahap,
-                'action' => 'rejected',
+                'action' => 'ditolak',
                 'comment' => $request->comment,
                 'approved_at' => now(),
             ]);
 
             // Update kegiatan status
             $kegiatan->update([
-                'status' => 'rejected',
+                'status' => 'ditolak',
             ]);
 
             // Redirect ke halaman sesuai tahap kegiatan
@@ -668,14 +708,19 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Check access
-        if ($user->isHima() && $kegiatan->user_id !== $user->id) {
-            abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
+        // Check access - Super Admin & Wadek III can access all
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if ($user->isHima() && $kegiatan->user_id !== $user->id) {
+                abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
+            }
+
+            if (!$user->isHima() && $kegiatan->prodi_id !== $user->prodi_id) {
+                abort(403, 'Anda tidak memiliki akses ke kegiatan prodi ini.');
+            }
         }
 
-        if (!$user->isWadek() && !$user->isHima() && $kegiatan->prodi_id !== $user->prodi_id) {
-            abort(403, 'Anda tidak memiliki akses ke kegiatan prodi ini.');
-        }
+        // Load relationships
+        $kegiatan->load(['jenisKegiatan', 'jenisPendanaan']);
 
         // Get proposal file
         $proposalFile = $kegiatan->getFileByTahap('proposal');
@@ -690,9 +735,11 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Hanya Hima pemilik yang bisa upload
-        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-            abort(403, 'Anda tidak memiliki akses untuk mengupload proposal.');
+        // Super Admin & Wadek III can upload all, otherwise only HIMA who owns it
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+                abort(403, 'Anda tidak memiliki akses untuk mengupload proposal.');
+            }
         }
 
         // Cek kondisi upload:
@@ -701,7 +748,7 @@ class KegiatanController extends Controller
 
         $canUpload = false;
 
-        if ($kegiatan->tahap === 'proposal' && in_array($kegiatan->status, ['draft', 'revision'])) {
+        if ($kegiatan->tahap === 'proposal' && in_array($kegiatan->status, ['draft', 'revisi'])) {
             $canUpload = true;
         }
 
@@ -712,7 +759,7 @@ class KegiatanController extends Controller
         // Get last revision comment if exists
         $lastRevision = ApprovalHistory::where('kegiatan_id', $kegiatan->id)
             ->where('tahap', 'proposal')
-            ->where('action', 'revision')
+            ->where('action', 'revisi')
             ->latest()
             ->first();
 
@@ -729,8 +776,11 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
+        // Super Admin & Wadek III can upload all, otherwise only HIMA who owns it
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
+            }
         }
 
         $request->validate([
@@ -748,7 +798,7 @@ class KegiatanController extends Controller
             $filePath = $file->storeAs('proposals', $fileName, 'public');
 
             // Jika revisi, hapus file lama (opsional - bisa juga keep untuk history)
-            if ($kegiatan->tahap === 'proposal' && $kegiatan->status === 'revision') {
+            if ($kegiatan->tahap === 'proposal' && $kegiatan->status === 'revisi') {
                 $oldFile = $kegiatan->getFileByTahap('proposal');
                 if ($oldFile && Storage::disk('public')->exists($oldFile->file_path)) {
                     Storage::disk('public')->delete($oldFile->file_path);
@@ -769,7 +819,7 @@ class KegiatanController extends Controller
             ]);
 
             // Status tidak perlu diubah saat upload
-            // Status tetap 'draft' atau 'revision' sampai user klik Submit
+            // Status tetap 'draft' atau 'revisi' sampai user klik Submit
             // Ini penting agar approver masih bisa melihat kegiatan yang diminta revisi
 
             return redirect()->route('kegiatan.proposal.show', $kegiatan)
@@ -792,7 +842,7 @@ class KegiatanController extends Controller
             return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
         }
 
-        if ($kegiatan->tahap !== 'proposal' || !in_array($kegiatan->status, ['draft', 'revision'])) {
+        if ($kegiatan->tahap !== 'proposal' || !in_array($kegiatan->status, ['draft', 'revisi'])) {
             return redirect()->back()->with('error', 'Proposal tidak dapat disubmit.');
         }
 
@@ -803,7 +853,7 @@ class KegiatanController extends Controller
         }
 
         // Logic sama seperti submit usulan
-        $updateData = ['status' => 'submitted'];
+        $updateData = ['status' => 'dikirim'];
 
         if ($kegiatan->status === 'draft') {
             $updateData['current_approver_role'] = 'pembina_hima';
@@ -862,33 +912,50 @@ class KegiatanController extends Controller
 
     /**
      * Display a listing of pendanaan (RAB stage).
+     * PENTING: Hanya tampilkan pendanaan yang BELUM selesai disetujui
+     * Pendanaan yang sudah disetujui penuh akan pindah ke tahap laporan (otomatis)
      */
     public function indexPendanaan()
     {
         $user = Auth::user();
 
-        // Base query - exclude rejected kegiatan
-        $query = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
+        // Base query - HANYA pendanaan yang belum selesai
+        // Exclude: ditolak DAN disetujui (sudah pindah ke laporan)
+        $query = Kegiatan::with(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories.approver', 'files'])
             ->where('tahap', 'pendanaan')
-            ->where('status', '!=', 'rejected')
+            ->whereNotIn('status', ['ditolak', 'disetujui']) // Yang disetujui sudah pindah tahap
             ->whereDoesntHave('approvalHistories', function($q) {
-                $q->where('action', 'rejected');
+                $q->where('action', 'ditolak');
             });
 
         // Filter kegiatan tahap pendanaan dengan progressive visibility
-        if ($user->isHima()) {
-            // Hima melihat semua pendanaan yang dia buat
+        if ($user->isSuperAdmin()) {
+            // Super Admin melihat SEMUA pendanaan dari SEMUA prodi yang masih dalam proses
+            // No additional filter needed
+        } elseif ($user->isHima()) {
+            // Hima melihat semua pendanaan yang dia buat (draft, dikirim, revisi)
             $query->where('user_id', $user->id);
         } elseif ($user->isPembina()) {
-            // Pembina melihat semua pendanaan di prodi mereka (monitoring)
-            $query->where('prodi_id', $user->prodi_id);
-        } elseif ($user->isKaprodi()) {
-            // Kaprodi melihat pendanaan yang sudah di-approve pembina (exclude completed - sudah pindah tahap)
+            // Pembina melihat pendanaan prodi mereka yang sudah disubmit (tidak termasuk draft)
             $query->where('prodi_id', $user->prodi_id)
-                ->whereIn('current_approver_role', ['kaprodi', 'wadek_iii']);
+                ->whereIn('status', ['dikirim', 'revisi']);
+        } elseif ($user->isKaprodi()) {
+            // Kaprodi melihat pendanaan yang sudah disetujui Pembina (menunggu approval kaprodi)
+            $query->where('prodi_id', $user->prodi_id)
+                ->where('status', 'dikirim')
+                ->whereHas('approvalHistories', function($q) {
+                    $q->where('approver_role', 'pembina_hima')
+                      ->where('tahap', 'pendanaan')
+                      ->where('action', 'disetujui');
+                });
         } elseif ($user->isWadek()) {
-            // Wadek melihat pendanaan yang sudah di-approve kaprodi (exclude completed - sudah pindah tahap)
-            $query->where('current_approver_role', 'wadek_iii');
+            // Wadek melihat pendanaan yang sudah disetujui Kaprodi (menunggu approval wadek)
+            $query->where('status', 'dikirim')
+                ->whereHas('approvalHistories', function($q) {
+                    $q->where('approver_role', 'kaprodi')
+                      ->where('tahap', 'pendanaan')
+                      ->where('action', 'disetujui');
+                });
         } else {
             $kegiatans = collect();
             return view('kegiatan.pendanaan.index', compact('kegiatans'));
@@ -922,16 +989,16 @@ class KegiatanController extends Controller
                 ->with('error', 'Kegiatan ini belum masuk tahap pendanaan.');
         }
 
-        // Check access
+        // Check access - Super Admin & Wadek III full access
         $hasAccess = false;
-        if ($user->isHima() && $kegiatan->user_id === $user->id) {
+        if ($user->isSuperAdmin() || $user->isWadek()) {
+            $hasAccess = true;
+        } elseif ($user->isHima() && $kegiatan->user_id === $user->id) {
             $hasAccess = true;
         } elseif ($user->isPembina() && $kegiatan->prodi_id === $user->prodi_id) {
             $hasAccess = true;
         } elseif ($user->isKaprodi() && $kegiatan->prodi_id === $user->prodi_id) {
             $hasAccess = in_array($kegiatan->current_approver_role, ['kaprodi', 'wadek_iii', 'completed']);
-        } elseif ($user->isWadek()) {
-            $hasAccess = in_array($kegiatan->current_approver_role, ['wadek_iii', 'completed']);
         }
 
         if (!$hasAccess) {
@@ -939,7 +1006,7 @@ class KegiatanController extends Controller
                 ->with('error', 'Anda tidak memiliki akses untuk melihat pendanaan ini.');
         }
 
-        $kegiatan->load(['user', 'prodi', 'approvalHistories' => function ($query) {
+        $kegiatan->load(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories' => function ($query) {
             $query->where('tahap', 'pendanaan')->with('approver')->orderBy('created_at', 'asc');
         }, 'files']);
 
@@ -955,8 +1022,11 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
+        // Super Admin & Wadek III can upload all, otherwise only HIMA who owns it
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
+            }
         }
 
         // Cek kondisi upload:
@@ -965,7 +1035,7 @@ class KegiatanController extends Controller
 
         $canUpload = false;
 
-        if ($kegiatan->tahap === 'pendanaan' && in_array($kegiatan->status, ['draft', 'revision'])) {
+        if ($kegiatan->tahap === 'pendanaan' && in_array($kegiatan->status, ['draft', 'revisi'])) {
             $canUpload = true;
         }
 
@@ -976,7 +1046,7 @@ class KegiatanController extends Controller
         // Get last revision comment if exists
         $lastRevision = ApprovalHistory::where('kegiatan_id', $kegiatan->id)
             ->where('tahap', 'pendanaan')
-            ->where('action', 'revision')
+            ->where('action', 'revisi')
             ->latest()
             ->first();
 
@@ -993,8 +1063,11 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
+        // Super Admin & Wadek III can upload all, otherwise only HIMA who owns it
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
+            }
         }
 
         $request->validate([
@@ -1038,7 +1111,7 @@ class KegiatanController extends Controller
 
             // Update total anggaran
             // Status tidak perlu diubah saat upload (tetap draft atau revision)
-            // Status baru berubah ke 'submitted' saat user klik tombol Submit
+            // Status baru berubah ke 'dikirim' saat user klik tombol Submit
             $kegiatan->update(['total_anggaran' => $request->total_anggaran]);
 
             return redirect()->route('kegiatan.pendanaan.show', $kegiatan)
@@ -1065,7 +1138,7 @@ class KegiatanController extends Controller
             return redirect()->back()->with('error', 'Kegiatan belum masuk tahap pendanaan.');
         }
 
-        if (!in_array($kegiatan->status, ['draft', 'revision'])) {
+        if (!in_array($kegiatan->status, ['draft', 'revisi'])) {
             return redirect()->back()->with('error', 'Pendanaan sudah dalam proses persetujuan.');
         }
 
@@ -1075,7 +1148,7 @@ class KegiatanController extends Controller
             return redirect()->back()->with('error', 'Anda harus upload file RAB terlebih dahulu.');
         }
 
-        $updateData = ['status' => 'submitted'];
+        $updateData = ['status' => 'dikirim'];
 
         if ($kegiatan->status === 'draft') {
             $updateData['current_approver_role'] = 'pembina_hima';
@@ -1134,35 +1207,50 @@ class KegiatanController extends Controller
 
     /**
      * Display a listing of laporan only.
+     * PENTING: Hanya tampilkan laporan yang BELUM selesai disetujui
+     * Laporan yang sudah disetujui penuh (status=disetujui) tidak ditampilkan di list, hanya di riwayat
      */
     public function indexLaporan()
     {
         $user = Auth::user();
 
-        // Base query - exclude rejected kegiatan
-        $query = Kegiatan::with(['user', 'prodi', 'approvalHistories.approver', 'files'])
+        // Base query - HANYA laporan yang belum selesai
+        // Exclude: ditolak DAN disetujui (completed)
+        $query = Kegiatan::with(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories.approver', 'files'])
             ->where('tahap', 'laporan')
-            ->where('status', '!=', 'rejected')
+            ->whereNotIn('status', ['ditolak', 'disetujui']) // Yang disetujui sudah completed
             ->whereDoesntHave('approvalHistories', function($q) {
-                $q->where('action', 'rejected');
+                $q->where('action', 'ditolak');
             });
 
         // Filter kegiatan tahap laporan berdasarkan role dan visibility
-        if ($user->isHima()) {
-            // Hima melihat semua laporan yang dia buat (exclude completed)
-            $query->where('user_id', $user->id)
-                ->where('current_approver_role', '!=', 'completed');
+        if ($user->isSuperAdmin()) {
+            // Super Admin melihat SEMUA laporan dari SEMUA prodi yang masih dalam proses
+            // No additional filter needed
+        } elseif ($user->isHima()) {
+            // Hima melihat laporan yang dia buat (draft, dikirim, revisi)
+            $query->where('user_id', $user->id);
         } elseif ($user->isPembina()) {
-            // Pembina melihat semua laporan prodi mereka (exclude completed)
+            // Pembina melihat laporan prodi mereka yang sudah disubmit (tidak termasuk draft)
             $query->where('prodi_id', $user->prodi_id)
-                ->where('current_approver_role', '!=', 'completed');
+                ->whereIn('status', ['dikirim', 'revisi']);
         } elseif ($user->isKaprodi()) {
-            // Kaprodi hanya melihat laporan yang sudah disetujui Pembina (exclude completed)
+            // Kaprodi melihat laporan yang sudah disetujui Pembina (menunggu approval kaprodi)
             $query->where('prodi_id', $user->prodi_id)
-                ->whereIn('current_approver_role', ['kaprodi', 'wadek_iii']);
+                ->where('status', 'dikirim')
+                ->whereHas('approvalHistories', function($q) {
+                    $q->where('approver_role', 'pembina_hima')
+                      ->where('tahap', 'laporan')
+                      ->where('action', 'disetujui');
+                });
         } elseif ($user->isWadek()) {
-            // Wadek hanya melihat laporan yang sudah disetujui Kaprodi (exclude completed)
-            $query->where('current_approver_role', 'wadek_iii');
+            // Wadek melihat laporan yang sudah disetujui Kaprodi (menunggu approval wadek)
+            $query->where('status', 'dikirim')
+                ->whereHas('approvalHistories', function($q) {
+                    $q->where('approver_role', 'kaprodi')
+                      ->where('tahap', 'laporan')
+                      ->where('action', 'disetujui');
+                });
         } else {
             $kegiatans = collect();
             return view('kegiatan.laporan.index', compact('kegiatans'));
@@ -1189,17 +1277,19 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Check access
-        if ($user->isHima() && $kegiatan->user_id !== $user->id) {
-            return redirect()->route('kegiatan.laporan.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
-        }
+        // Check access - Super Admin & Wadek III can access all
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if ($user->isHima() && $kegiatan->user_id !== $user->id) {
+                return redirect()->route('kegiatan.laporan.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
+            }
 
-        if (!$user->isWadek() && !$user->isHima() && $kegiatan->prodi_id !== $user->prodi_id) {
-            return redirect()->route('kegiatan.laporan.index')->with('error', 'Anda tidak memiliki akses ke laporan prodi ini.');
+            if (!$user->isHima() && $kegiatan->prodi_id !== $user->prodi_id) {
+                return redirect()->route('kegiatan.laporan.index')->with('error', 'Anda tidak memiliki akses ke laporan prodi ini.');
+            }
         }
 
         // Load relationships
-        $kegiatan->load(['user', 'prodi', 'approvalHistories.approver.role', 'files']);
+        $kegiatan->load(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories.approver.role', 'files']);
 
         // Get laporan file
         $laporanFile = $kegiatan->getFileByTahap('laporan');
@@ -1214,9 +1304,11 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Only Hima who owns the kegiatan can upload
-        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-            return redirect()->route('kegiatan.laporan.index')->with('error', 'Anda tidak memiliki akses untuk mengupload laporan.');
+        // Super Admin & Wadek III can upload all, otherwise only HIMA who owns it
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+                return redirect()->route('kegiatan.laporan.index')->with('error', 'Anda tidak memiliki akses untuk mengupload laporan.');
+            }
         }
 
         // Must be in laporan tahap
@@ -1225,7 +1317,7 @@ class KegiatanController extends Controller
         }
 
         // Can only upload if draft or revision
-        if (!in_array($kegiatan->status, ['draft', 'revision'])) {
+        if (!in_array($kegiatan->status, ['draft', 'revisi'])) {
             return redirect()->route('kegiatan.laporan.show', $kegiatan)
                 ->with('error', 'Laporan sudah disubmit dan sedang dalam proses persetujuan.');
         }
@@ -1242,13 +1334,15 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Validate ownership
-        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
+        // Super Admin & Wadek III can upload all, otherwise only HIMA who owns it
+        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
+            }
         }
 
         // Validate status
-        if (!in_array($kegiatan->status, ['draft', 'revision'])) {
+        if (!in_array($kegiatan->status, ['draft', 'revisi'])) {
             return redirect()->back()->with('error', 'Laporan tidak dapat diupload karena sudah dalam proses persetujuan.');
         }
 
@@ -1287,7 +1381,7 @@ class KegiatanController extends Controller
             ]);
 
             // Status tidak perlu diubah saat upload
-            // Status tetap 'draft' atau 'revision' sampai user klik Submit
+            // Status tetap 'draft' atau 'revisi' sampai user klik Submit
 
             return redirect()->route('kegiatan.laporan.show', $kegiatan)
                 ->with('success', 'File LPJ berhasil diupload. Silakan submit untuk proses persetujuan.');
@@ -1315,12 +1409,12 @@ class KegiatanController extends Controller
         }
 
         // Validate status - allow draft or revision
-        if (!in_array($kegiatan->status, ['draft', 'revision'])) {
+        if (!in_array($kegiatan->status, ['draft', 'revisi'])) {
             return redirect()->back()->with('error', 'Laporan sudah disubmit.');
         }
 
         try {
-            $updateData = ['status' => 'submitted'];
+            $updateData = ['status' => 'dikirim'];
 
             if ($kegiatan->status === 'draft') {
                 $updateData['current_approver_role'] = 'pembina_hima';

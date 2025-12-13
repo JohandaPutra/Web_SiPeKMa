@@ -71,7 +71,7 @@ class KegiatanSeeder extends Seeder
             'tempat_kegiatan' => 'Lab Komputer 3',
             'jenis_pendanaan' => 'sponsor',
             'tahap' => 'usulan',
-            'status' => 'submitted',
+            'status' => 'dikirim',
             'current_approver_role' => 'pembina_hima',
         ]);
 
@@ -87,7 +87,7 @@ class KegiatanSeeder extends Seeder
             'tempat_kegiatan' => 'Gedung Olahraga Kampus',
             'jenis_pendanaan' => 'hibah',
             'tahap' => 'usulan',
-            'status' => 'submitted',
+            'status' => 'dikirim',
             'current_approver_role' => 'pembina_hima',
         ]);
 
@@ -103,10 +103,10 @@ class KegiatanSeeder extends Seeder
             'tempat_kegiatan' => 'Lab Mobile Programming',
             'jenis_pendanaan' => 'internal',
             'tahap' => 'usulan',
-            'status' => 'submitted',
+            'status' => 'dikirim',
             'current_approver_role' => 'kaprodi',
         ]);
-        $this->addApproval($kegiatan4->id, $pembinaIF->id, 'approved', 'Usulan bagus dan sesuai kebutuhan mahasiswa.');
+        $this->addApproval($kegiatan4->id, $pembinaIF->id, 'disetujui', 'Usulan bagus dan sesuai kebutuhan mahasiswa.');
 
         // 5. Usulan Approved Kaprodi - Menunggu Wadek
         $kegiatan5 = $this->createKegiatan([
@@ -120,11 +120,11 @@ class KegiatanSeeder extends Seeder
             'tempat_kegiatan' => 'Jakarta',
             'jenis_pendanaan' => 'mandiri',
             'tahap' => 'usulan',
-            'status' => 'submitted',
+            'status' => 'dikirim',
             'current_approver_role' => 'wadek_iii',
         ]);
-        $this->addApproval($kegiatan5->id, $pembinaSI->id, 'approved', 'Kegiatan ini dapat memberi exposure industri kepada mahasiswa.');
-        $this->addApproval($kegiatan5->id, $kaprodiSI->id, 'approved', 'Sangat mendukung, akan meningkatkan wawasan mahasiswa tentang dunia kerja.');
+        $this->addApproval($kegiatan5->id, $pembinaSI->id, 'disetujui', 'Kegiatan ini dapat memberi exposure industri kepada mahasiswa.');
+        $this->addApproval($kegiatan5->id, $kaprodiSI->id, 'disetujui', 'Sangat mendukung, akan meningkatkan wawasan mahasiswa tentang dunia kerja.');
 
         // 6. Usulan Approved Wadek - Siap Upload Proposal
         $kegiatan6 = $this->createKegiatan([
@@ -138,12 +138,12 @@ class KegiatanSeeder extends Seeder
             'tempat_kegiatan' => 'Online via Zoom',
             'jenis_pendanaan' => 'sponsor',
             'tahap' => 'usulan',
-            'status' => 'approved',
+            'status' => 'disetujui',
             'current_approver_role' => 'completed',
         ]);
-        $this->addApproval($kegiatan6->id, $pembinaTK->id, 'approved', 'Topik yang sangat relevan dengan perkembangan teknologi saat ini.');
-        $this->addApproval($kegiatan6->id, $kaprodiTK->id, 'approved', 'Disetujui, mohon koordinasi dengan prodi untuk narasumber.');
-        $this->addApproval($kegiatan6->id, $wadek->id, 'approved', 'Disetujui. Silakan lanjutkan ke tahap proposal.');
+        $this->addApproval($kegiatan6->id, $pembinaTK->id, 'disetujui', 'Topik yang sangat relevan dengan perkembangan teknologi saat ini.');
+        $this->addApproval($kegiatan6->id, $kaprodiTK->id, 'disetujui', 'Disetujui, mohon koordinasi dengan prodi untuk narasumber.');
+        $this->addApproval($kegiatan6->id, $wadek->id, 'disetujui', 'Disetujui. Silakan lanjutkan ke tahap proposal.');
 
         // 7. Usulan Revision
         $kegiatan7 = $this->createKegiatan([
@@ -157,10 +157,10 @@ class KegiatanSeeder extends Seeder
             'tempat_kegiatan' => 'Lab Komputer 1 & 2',
             'jenis_pendanaan' => 'sponsor',
             'tahap' => 'usulan',
-            'status' => 'revision',
+            'status' => 'revisi',
             'current_approver_role' => 'pembina_hima',
         ]);
-        $this->addApproval($kegiatan7->id, $pembinaIF->id, 'revision', 'Mohon tambahkan detail anggaran akomodasi peserta dan jadwal yang lebih spesifik.');
+        $this->addApproval($kegiatan7->id, $pembinaIF->id, 'revisi', 'Mohon tambahkan detail anggaran akomodasi peserta dan jadwal yang lebih spesifik.');
 
         // 8. Usulan Rejected
         $kegiatan8 = $this->createKegiatan([
@@ -174,10 +174,10 @@ class KegiatanSeeder extends Seeder
             'tempat_kegiatan' => 'Bali',
             'jenis_pendanaan' => 'mandiri',
             'tahap' => 'usulan',
-            'status' => 'rejected',
+            'status' => 'ditolak',
             'current_approver_role' => null,
         ]);
-        $this->addApproval($kegiatan8->id, $pembinaSI->id, 'rejected', 'Usulan tidak memiliki nilai akademis dan tidak sesuai dengan tujuan organisasi kemahasiswaan.');
+        $this->addApproval($kegiatan8->id, $pembinaSI->id, 'ditolak', 'Usulan tidak memiliki nilai akademis dan tidak sesuai dengan tujuan organisasi kemahasiswaan.');
 
         // ==========================================
         // TAHAP PROPOSAL - Draft Siap Submit
@@ -199,9 +199,9 @@ class KegiatanSeeder extends Seeder
             'current_approver_role' => null,
         ]);
         // Approval history untuk tahap usulan (sudah selesai)
-        $this->addApprovalWithTahap($kegiatan9->id, $pembinaTK->id, 'approved', 'Topik cyber security sangat penting untuk mahasiswa.', 'usulan');
-        $this->addApprovalWithTahap($kegiatan9->id, $kaprodiTK->id, 'approved', 'Disetujui, mohon koordinasi dengan lab untuk peralatan.', 'usulan');
-        $this->addApprovalWithTahap($kegiatan9->id, $wadek->id, 'approved', 'Disetujui. Usulan diterima, silakan lanjut ke proposal.', 'usulan');
+        $this->addApprovalWithTahap($kegiatan9->id, $pembinaTK->id, 'disetujui', 'Topik cyber security sangat penting untuk mahasiswa.', 'usulan');
+        $this->addApprovalWithTahap($kegiatan9->id, $kaprodiTK->id, 'disetujui', 'Disetujui, mohon koordinasi dengan lab untuk peralatan.', 'usulan');
+        $this->addApprovalWithTahap($kegiatan9->id, $wadek->id, 'disetujui', 'Disetujui. Usulan diterima, silakan lanjut ke proposal.', 'usulan');
         // Simulasi file proposal sudah diupload
         $this->addFile($kegiatan9->id, 'proposal', 'Proposal_Workshop_CyberSecurity.pdf', 1856432);
 
@@ -225,15 +225,15 @@ class KegiatanSeeder extends Seeder
             'current_approver_role' => null,
         ]);
         // Approval history untuk tahap usulan
-        $this->addApprovalWithTahap($kegiatan10->id, $pembinaIF->id, 'approved', 'Kegiatan sangat bermanfaat untuk mahasiswa.', 'usulan');
-        $this->addApprovalWithTahap($kegiatan10->id, $kaprodiIF->id, 'approved', 'Mendukung penuh kegiatan ini.', 'usulan');
-        $this->addApprovalWithTahap($kegiatan10->id, $wadek->id, 'approved', 'Disetujui untuk tahap usulan.', 'usulan');
+        $this->addApprovalWithTahap($kegiatan10->id, $pembinaIF->id, 'disetujui', 'Kegiatan sangat bermanfaat untuk mahasiswa.', 'usulan');
+        $this->addApprovalWithTahap($kegiatan10->id, $kaprodiIF->id, 'disetujui', 'Mendukung penuh kegiatan ini.', 'usulan');
+        $this->addApprovalWithTahap($kegiatan10->id, $wadek->id, 'disetujui', 'Disetujui untuk tahap usulan.', 'usulan');
         // File proposal yang sudah diupload
         $this->addFile($kegiatan10->id, 'proposal', 'Proposal_Tech_Talk_Career_Path.pdf', 2458624);
         // Approval history untuk tahap proposal
-        $this->addApprovalWithTahap($kegiatan10->id, $pembinaIF->id, 'approved', 'Proposal lengkap dan detail.', 'proposal');
-        $this->addApprovalWithTahap($kegiatan10->id, $kaprodiIF->id, 'approved', 'Proposal sangat baik.', 'proposal');
-        $this->addApprovalWithTahap($kegiatan10->id, $wadek->id, 'approved', 'Disetujui untuk proposal. Lanjut ke pendanaan.', 'proposal');
+        $this->addApprovalWithTahap($kegiatan10->id, $pembinaIF->id, 'disetujui', 'Proposal lengkap dan detail.', 'proposal');
+        $this->addApprovalWithTahap($kegiatan10->id, $kaprodiIF->id, 'disetujui', 'Proposal sangat baik.', 'proposal');
+        $this->addApprovalWithTahap($kegiatan10->id, $wadek->id, 'disetujui', 'Disetujui untuk proposal. Lanjut ke pendanaan.', 'proposal');
         // Simulasi file RAB sudah diupload dengan anggaran
         $this->addFile($kegiatan10->id, 'rab', 'RAB_Tech_Talk_Career_Path.pdf', 1345678);
         Kegiatan::where('id', $kegiatan10->id)->update(['total_anggaran' => 15000000]);
@@ -259,17 +259,17 @@ class KegiatanSeeder extends Seeder
             'current_approver_role' => null,
         ]);
         // Historical approvals (all previous stages approved)
-        $this->addApprovalWithTahap($kegiatan11->id, $pembinaSI->id, 'approved', 'Usulan disetujui.', 'usulan');
-        $this->addApprovalWithTahap($kegiatan11->id, $kaprodiSI->id, 'approved', 'Usulan disetujui.', 'usulan');
-        $this->addApprovalWithTahap($kegiatan11->id, $wadek->id, 'approved', 'Usulan disetujui, lanjut proposal.', 'usulan');
+        $this->addApprovalWithTahap($kegiatan11->id, $pembinaSI->id, 'disetujui', 'Usulan disetujui.', 'usulan');
+        $this->addApprovalWithTahap($kegiatan11->id, $kaprodiSI->id, 'disetujui', 'Usulan disetujui.', 'usulan');
+        $this->addApprovalWithTahap($kegiatan11->id, $wadek->id, 'disetujui', 'Usulan disetujui, lanjut proposal.', 'usulan');
         $this->addFile($kegiatan11->id, 'proposal', 'Proposal_Pelatihan_Database.pdf', 1856432);
-        $this->addApprovalWithTahap($kegiatan11->id, $pembinaSI->id, 'approved', 'Proposal disetujui.', 'proposal');
-        $this->addApprovalWithTahap($kegiatan11->id, $kaprodiSI->id, 'approved', 'Proposal disetujui.', 'proposal');
-        $this->addApprovalWithTahap($kegiatan11->id, $wadek->id, 'approved', 'Proposal disetujui, lanjut pendanaan.', 'proposal');
+        $this->addApprovalWithTahap($kegiatan11->id, $pembinaSI->id, 'disetujui', 'Proposal disetujui.', 'proposal');
+        $this->addApprovalWithTahap($kegiatan11->id, $kaprodiSI->id, 'disetujui', 'Proposal disetujui.', 'proposal');
+        $this->addApprovalWithTahap($kegiatan11->id, $wadek->id, 'disetujui', 'Proposal disetujui, lanjut pendanaan.', 'proposal');
         $this->addFile($kegiatan11->id, 'rab', 'RAB_Pelatihan_Database.pdf', 1234567);
-        $this->addApprovalWithTahap($kegiatan11->id, $pembinaSI->id, 'approved', 'RAB disetujui.', 'pendanaan');
-        $this->addApprovalWithTahap($kegiatan11->id, $kaprodiSI->id, 'approved', 'RAB disetujui.', 'pendanaan');
-        $this->addApprovalWithTahap($kegiatan11->id, $wadek->id, 'approved', 'RAB disetujui, silakan upload LPJ setelah kegiatan selesai.', 'pendanaan');
+        $this->addApprovalWithTahap($kegiatan11->id, $pembinaSI->id, 'disetujui', 'RAB disetujui.', 'pendanaan');
+        $this->addApprovalWithTahap($kegiatan11->id, $kaprodiSI->id, 'disetujui', 'RAB disetujui.', 'pendanaan');
+        $this->addApprovalWithTahap($kegiatan11->id, $wadek->id, 'disetujui', 'RAB disetujui, silakan upload LPJ setelah kegiatan selesai.', 'pendanaan');
 
         $this->command->info('✅ Seeder berhasil: 11 kegiatan dengan berbagai status');
         $this->command->info('   - 6 usulan (draft, submitted, 2x di pembina, di kaprodi, di wadek)');

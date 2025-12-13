@@ -15,7 +15,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb breadcrumb-style1 mb-0">
                     <li class="breadcrumb-item">
-                        <a href="javascript:void(0);" class="text-muted">Dashboard</a>
+                        <a href="{{ route('dashboard-analytics') }}" class="text-muted">Dashboard</a>
                     </li>
                     <li class="breadcrumb-item">
                         <a href="{{ route('users.index') }}" class="text-muted">Users</a>
@@ -91,6 +91,46 @@
                                     @error('email')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                </div>
+
+                                <!-- Role -->
+                                <div class="col-md-6">
+                                    <label for="role_id" class="form-label fw-medium">
+                                        <i class="bx bx-shield me-1 text-primary"></i>Role
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select @error('role_id') is-invalid @enderror"
+                                        id="role_id" name="role_id" required>
+                                        <option value="">-- Pilih Role --</option>
+                                        @foreach ($roles as $role)
+                                            <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>
+                                                {{ ucfirst(str_replace('_', ' ', $role->name)) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('role_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Prodi -->
+                                <div class="col-md-6">
+                                    <label for="prodi_id" class="form-label fw-medium">
+                                        <i class="bx bx-buildings me-1 text-primary"></i>Prodi
+                                    </label>
+                                    <select class="form-select @error('prodi_id') is-invalid @enderror"
+                                        id="prodi_id" name="prodi_id">
+                                        <option value="">-- Pilih Prodi (Opsional) --</option>
+                                        @foreach ($prodis as $prodi)
+                                            <option value="{{ $prodi->id }}" {{ old('prodi_id') == $prodi->id ? 'selected' : '' }}>
+                                                {{ $prodi->nama_prodi }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('prodi_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="form-text">Kosongkan jika role adalah Admin/Wadek III</div>
                                 </div>
 
                                 <!-- Password -->

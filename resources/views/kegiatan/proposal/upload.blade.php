@@ -35,7 +35,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
                     <div class="flex-shrink-0">
-                        @if($kegiatan->status === 'revision')
+                        @if($kegiatan->status === 'revisi')
                         <span class="badge bg-warning p-3">
                             <i class="bx bx-error" style="font-size: 1.5rem;"></i>
                         </span>
@@ -48,7 +48,7 @@
                     <div class="flex-grow-1 ms-3">
                         <h5 class="mb-1">{{ $kegiatan->nama_kegiatan }}</h5>
                         <p class="text-muted mb-0">
-                            @if($kegiatan->status === 'revision')
+                            @if($kegiatan->status === 'revisi')
                             <small>Proposal perlu revisi. Silakan upload dokumen proposal yang telah diperbaiki.</small>
                             @else
                             <small>Usulan telah disetujui. Silakan upload dokumen proposal Anda.</small>
@@ -57,20 +57,20 @@
                     </div>
                 </div>
 
-                @if($kegiatan->status === 'revision')
+                @if($kegiatan->status === 'revisi')
                 @php
-                    $lastRevisionHistory = $kegiatan->approvalHistories
+                    $lastRevisiHistory = $kegiatan->approvalHistories
                         ->where('tahap', 'proposal')
-                        ->where('action', 'revision')
+                        ->where('action', 'revisi')
                         ->sortByDesc('approved_at')
                         ->first();
                 @endphp
-                @if($lastRevisionHistory && $lastRevisionHistory->comment)
+                @if($lastRevisiHistory && $lastRevisiHistory->comment)
                 <div class="alert alert-warning mb-3">
                     <strong><i class="bx bx-error-circle me-1"></i> Catatan Revisi:</strong>
-                    <p class="mb-0 mt-2">{{ $lastRevisionHistory->comment }}</p>
+                    <p class="mb-0 mt-2">{{ $lastRevisiHistory->comment }}</p>
                     <small class="text-muted">
-                        - {{ $lastRevisionHistory->approver->role->display_name }} ({{ $lastRevisionHistory->approved_at->format('d M Y H:i') }})
+                        - {{ $lastRevisiHistory->approver->role->display_name }} ({{ $lastRevisiHistory->approved_at->format('d M Y H:i') }})
                     </small>
                 </div>
                 @endif

@@ -115,7 +115,7 @@ class User extends Authenticatable
   }
 
   /**
-   * Check if user is Wadek III (also admin)
+   * Check if user is Wadek III
    */
   public function isWadek(): bool
   {
@@ -123,10 +123,26 @@ class User extends Authenticatable
   }
 
   /**
-   * Check if user is admin (Wadek III)
+   * Check if user is Super Admin
+   */
+  public function isSuperAdmin(): bool
+  {
+    return $this->hasRole('admin');
+  }
+
+  /**
+   * Check if user is admin (Super Admin or Wadek III)
    */
   public function isAdmin(): bool
   {
-    return $this->isWadek();
+    return $this->isSuperAdmin() || $this->isWadek();
+  }
+
+  /**
+   * Check if user has management access (Super Admin or Wadek III)
+   */
+  public function canManage(): bool
+  {
+    return $this->isSuperAdmin() || $this->isWadek();
   }
 }

@@ -74,7 +74,7 @@
                             <strong>{{ $kegiatan->nama_kegiatan }}</strong>
                             <br><small class="text-muted">{{ Str::limit($kegiatan->deskripsi_kegiatan, 50) }}</small>
                         </td>
-                        <td><span class="badge bg-label-info">{{ $kegiatan->jenis_kegiatan }}</span></td>
+                        <td><span class="badge bg-label-info">{{ $kegiatan->jenisKegiatan->nama ?? '-' }}</span></td>
                         <td>
                             <small>
                                 {{ $kegiatan->tanggal_mulai->format('d M Y') }}<br>

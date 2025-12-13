@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('approver_user_id')->constrained('users')->onDelete('cascade');
             $table->string('approver_role'); // pembina_hima, kaprodi, wadek_iii
             $table->enum('tahap', ['usulan', 'proposal', 'pendanaan', 'laporan']);
-            $table->enum('action', ['approved', 'revision', 'rejected']);
+            $table->enum('action', ['disetujui', 'revisi', 'ditolak']);
             $table->text('comment')->nullable(); // Komentar untuk revisi
             $table->timestamp('approved_at');
             $table->timestamps();

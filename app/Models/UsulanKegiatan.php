@@ -42,10 +42,10 @@ class UsulanKegiatan extends Model
   {
     return match ($this->status_kegiatan) {
       'draft' => 'secondary',
-      'submitted' => 'info',
+      'dikirim' => 'info',
       'review' => 'warning',
-      'approved' => 'success',
-      'rejected' => 'danger',
+      'disetujui' => 'success',
+      'ditolak' => 'danger',
       default => 'secondary'
     };
   }
@@ -57,10 +57,10 @@ class UsulanKegiatan extends Model
   {
     return match ($this->status_kegiatan) {
       'draft' => 'Draft',
-      'submitted' => 'Diajukan',
+      'dikirim' => 'Diajukan',
       'review' => 'Review',
-      'approved' => 'Disetujui',
-      'rejected' => 'Ditolak',
+      'disetujui' => 'Disetujui',
+      'ditolak' => 'Ditolak',
       default => 'Draft'
     };
   }

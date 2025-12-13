@@ -25,10 +25,10 @@
     </div>
 </div>
 
-<!-- Revision Modal -->
-<div class="modal fade" id="revisionModal" tabindex="-1" aria-hidden="true">
+<!-- Revisi Modal -->
+<div class="modal fade" id="RevisiModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <form action="{{ route('kegiatan.revision', $kegiatan) }}" method="POST">
+        <form action="{{ route('kegiatan.revisi', $kegiatan) }}" method="POST">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
@@ -54,7 +54,7 @@
 <!-- Reject Modal -->
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <form action="{{ route('kegiatan.reject', $kegiatan) }}" method="POST">
+        <form action="{{ route('kegiatan.tolak', $kegiatan) }}" method="POST">
             @csrf
             <div class="modal-content">
                 <div class="modal-header bg-danger">

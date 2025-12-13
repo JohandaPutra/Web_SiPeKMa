@@ -47,17 +47,17 @@
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label class="form-label" for="jenis_kegiatan">Jenis Kegiatan <span class="text-danger">*</span></label>
-                            <select class="form-select @error('jenis_kegiatan') is-invalid @enderror"
-                                    id="jenis_kegiatan" name="jenis_kegiatan">
+                            <label class="form-label" for="jenis_kegiatan_id">Jenis Kegiatan <span class="text-danger">*</span></label>
+                            <select class="form-select @error('jenis_kegiatan_id') is-invalid @enderror"
+                                    id="jenis_kegiatan_id" name="jenis_kegiatan_id">
                                 <option value="">Pilih Jenis</option>
-                                <option value="seminar" {{ old('jenis_kegiatan') == 'seminar' ? 'selected' : '' }}>Seminar</option>
-                                <option value="workshop" {{ old('jenis_kegiatan') == 'workshop' ? 'selected' : '' }}>Workshop</option>
-                                <option value="pelatihan" {{ old('jenis_kegiatan') == 'pelatihan' ? 'selected' : '' }}>Pelatihan</option>
-                                <option value="lomba" {{ old('jenis_kegiatan') == 'lomba' ? 'selected' : '' }}>Lomba</option>
-                                <option value="lainnya" {{ old('jenis_kegiatan') == 'lainnya' ? 'selected' : '' }}>Lainnya</option>
+                                @foreach($jenisKegiatans as $jenis)
+                                    <option value="{{ $jenis->id }}" {{ old('jenis_kegiatan_id') == $jenis->id ? 'selected' : '' }}>
+                                        {{ $jenis->nama }}
+                                    </option>
+                                @endforeach
                             </select>
-                            @error('jenis_kegiatan')
+                            @error('jenis_kegiatan_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -84,16 +84,17 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label" for="jenis_pendanaan">Jenis Pendanaan <span class="text-danger">*</span></label>
-                            <select class="form-select @error('jenis_pendanaan') is-invalid @enderror"
-                                    id="jenis_pendanaan" name="jenis_pendanaan">
+                            <label class="form-label" for="jenis_pendanaan_id">Jenis Pendanaan <span class="text-danger">*</span></label>
+                            <select class="form-select @error('jenis_pendanaan_id') is-invalid @enderror"
+                                    id="jenis_pendanaan_id" name="jenis_pendanaan_id">
                                 <option value="">Pilih Jenis Pendanaan</option>
-                                <option value="mandiri" {{ old('jenis_pendanaan') == 'mandiri' ? 'selected' : '' }}>Mandiri</option>
-                                <option value="sponsor" {{ old('jenis_pendanaan') == 'sponsor' ? 'selected' : '' }}>Sponsor</option>
-                                <option value="hibah" {{ old('jenis_pendanaan') == 'hibah' ? 'selected' : '' }}>Hibah</option>
-                                <option value="internal" {{ old('jenis_pendanaan') == 'internal' ? 'selected' : '' }}>Internal Kampus</option>
+                                @foreach($jenisPendanaans as $jenis)
+                                    <option value="{{ $jenis->id }}" {{ old('jenis_pendanaan_id') == $jenis->id ? 'selected' : '' }}>
+                                        {{ $jenis->nama }}
+                                    </option>
+                                @endforeach
                             </select>
-                            @error('jenis_pendanaan')
+                            @error('jenis_pendanaan_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>

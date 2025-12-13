@@ -163,14 +163,14 @@
                                     id="status_kegiatan" name="status_kegiatan">
                                     <option value="draft"
                                         {{ old('status_kegiatan', 'draft') == 'draft' ? 'selected' : '' }}>Draft</option>
-                                    <option value="submitted"
-                                        {{ old('status_kegiatan') == 'submitted' ? 'selected' : '' }}>Submitted</option>
+                                    <option value="dikirim"
+                                        {{ old('status_kegiatan') == 'dikirim' ? 'selected' : '' }}>Dikirim</option>
                                     <option value="review" {{ old('status_kegiatan') == 'review' ? 'selected' : '' }}>
                                         Review</option>
-                                    <option value="approved" {{ old('status_kegiatan') == 'approved' ? 'selected' : '' }}>
+                                    <option value="disetujui" {{ old('status_kegiatan') == 'disetujui' ? 'selected' : '' }}>
                                         Approved</option>
-                                    <option value="rejected" {{ old('status_kegiatan') == 'rejected' ? 'selected' : '' }}>
-                                        Rejected</option>
+                                    <option value="ditolak" {{ old('status_kegiatan') == 'ditolak' ? 'selected' : '' }}>
+                                        Ditolak</option>
                                 </select>
                                 @error('status_kegiatan')
                                     <div class="invalid-feedback">{{ $message }}</div>

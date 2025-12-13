@@ -45,7 +45,7 @@
                 <div class="row mb-3">
                     <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Kegiatan:</strong></div>
                     <div class="col-12 col-sm-8">
-                        <span class="badge bg-label-info">{{ ucfirst($kegiatan->jenis_kegiatan) }}</span>
+                        <span class="badge bg-label-info">{{ $kegiatan->jenisKegiatan->nama ?? '-' }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -66,7 +66,7 @@
                 <div class="row mb-3">
                     <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Pendanaan:</strong></div>
                     <div class="col-12 col-sm-8">
-                        <span class="badge bg-label-warning">{{ ucfirst($kegiatan->jenis_pendanaan) }}</span>
+                        <span class="badge bg-label-warning">{{ $kegiatan->jenisPendanaan->nama ?? '-' }}</span>
                     </div>
                 </div>
                 @if($kegiatan->total_anggaran)
@@ -100,19 +100,19 @@
                             <h6 class="mb-2">Usulan</h6>
                             @php
                             $usulanApprovals = isset($approvalsByTahap['usulan']) ? $approvalsByTahap['usulan'] : collect();
-                            $usulanApprovedCount = $usulanApprovals->where('action', 'approved')->count();
-                            $usulanRejected = $usulanApprovals->where('action', 'rejected')->count() > 0;
+                            $usulanDisetujuiCount = $usulanApprovals->where('action', 'disetujui')->count();
+                            $usulanDitolak = $usulanApprovals->where('action', 'ditolak')->count() > 0;
 
-                            if ($usulanRejected) {
+                            if ($usulanDitolak) {
                                 $usulanStatus = 'Ditolak';
                                 $usulanBadge = 'danger';
-                            } elseif ($usulanApprovedCount >= 3 || $kegiatan->tahap !== 'usulan') {
+                            } elseif ($usulanDisetujuiCount >= 3 || $kegiatan->tahap !== 'usulan') {
                                 $usulanStatus = 'Disetujui';
                                 $usulanBadge = 'success';
-                            } elseif ($kegiatan->tahap === 'usulan' && $kegiatan->status === 'submitted') {
+                            } elseif ($kegiatan->tahap === 'usulan' && $kegiatan->status === 'dikirim') {
                                 $usulanStatus = 'Progress';
                                 $usulanBadge = 'info';
-                            } elseif ($kegiatan->tahap === 'usulan' && $kegiatan->status === 'revision') {
+                            } elseif ($kegiatan->tahap === 'usulan' && $kegiatan->status === 'revisi') {
                                 $usulanStatus = 'Revisi';
                                 $usulanBadge = 'warning';
                             } else {
@@ -135,15 +135,15 @@
                             <h6 class="mb-2">Proposal</h6>
                             @php
                             $proposalApprovals = isset($approvalsByTahap['proposal']) ? $approvalsByTahap['proposal'] : collect();
-                            $proposalApprovedCount = $proposalApprovals->where('action', 'approved')->count();
-                            $proposalRejected = $proposalApprovals->where('action', 'rejected')->count() > 0;
+                            $proposalDisetujuiCount = $proposalApprovals->where('action', 'disetujui')->count();
+                            $proposalDitolak = $proposalApprovals->where('action', 'ditolak')->count() > 0;
 
                             // Cek ditolak dulu sebagai prioritas tertinggi
-                            if ($proposalRejected) {
+                            if ($proposalDitolak) {
                                 $proposalStatus = 'Ditolak';
                                 $proposalBadge = 'danger';
                                 $proposalDisabled = false;
-                            } elseif ($proposalApprovedCount >= 3 || ($kegiatan->tahap !== 'proposal' && $kegiatan->tahap !== 'usulan')) {
+                            } elseif ($proposalDisetujuiCount >= 3 || ($kegiatan->tahap !== 'proposal' && $kegiatan->tahap !== 'usulan')) {
                                 // Tahap proposal sudah selesai/disetujui (pindah ke pendanaan/laporan)
                                 $proposalStatus = 'Disetujui';
                                 $proposalBadge = 'success';
@@ -153,11 +153,11 @@
                                 $proposalStatus = 'Belum Upload';
                                 $proposalBadge = 'secondary';
                                 $proposalDisabled = true;
-                            } elseif ($kegiatan->tahap === 'proposal' && $kegiatan->status === 'submitted') {
+                            } elseif ($kegiatan->tahap === 'proposal' && $kegiatan->status === 'dikirim') {
                                 $proposalStatus = 'Progress';
                                 $proposalBadge = 'info';
                                 $proposalDisabled = false;
-                            } elseif ($kegiatan->tahap === 'proposal' && $kegiatan->status === 'revision') {
+                            } elseif ($kegiatan->tahap === 'proposal' && $kegiatan->status === 'revisi') {
                                 $proposalStatus = 'Revisi';
                                 $proposalBadge = 'warning';
                                 $proposalDisabled = false;
@@ -188,15 +188,15 @@
                             <h6 class="mb-2">Pendanaan</h6>
                             @php
                             $pendanaanApprovals = isset($approvalsByTahap['pendanaan']) ? $approvalsByTahap['pendanaan'] : collect();
-                            $pendanaanApprovedCount = $pendanaanApprovals->where('action', 'approved')->count();
-                            $pendanaanRejected = $pendanaanApprovals->where('action', 'rejected')->count() > 0;
+                            $pendanaanDisetujuiCount = $pendanaanApprovals->where('action', 'disetujui')->count();
+                            $pendanaanDitolak = $pendanaanApprovals->where('action', 'ditolak')->count() > 0;
 
                             // Cek ditolak dulu sebagai prioritas tertinggi
-                            if ($pendanaanRejected) {
+                            if ($pendanaanDitolak) {
                                 $pendanaanStatus = 'Ditolak';
                                 $pendanaanBadge = 'danger';
                                 $pendanaanDisabled = false;
-                            } elseif ($pendanaanApprovedCount >= 3 || $kegiatan->tahap === 'laporan') {
+                            } elseif ($pendanaanDisetujuiCount >= 3 || $kegiatan->tahap === 'laporan') {
                                 // Tahap pendanaan sudah selesai/disetujui (pindah ke laporan)
                                 $pendanaanStatus = 'Disetujui';
                                 $pendanaanBadge = 'success';
@@ -206,11 +206,11 @@
                                 $pendanaanStatus = 'Belum Upload';
                                 $pendanaanBadge = 'secondary';
                                 $pendanaanDisabled = true;
-                            } elseif ($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'submitted') {
+                            } elseif ($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'dikirim') {
                                 $pendanaanStatus = 'Progress';
                                 $pendanaanBadge = 'info';
                                 $pendanaanDisabled = false;
-                            } elseif ($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'revision') {
+                            } elseif ($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'revisi') {
                                 $pendanaanStatus = 'Revisi';
                                 $pendanaanBadge = 'warning';
                                 $pendanaanDisabled = false;
@@ -241,15 +241,15 @@
                             <h6 class="mb-2">Laporan</h6>
                             @php
                             $laporanApprovals = isset($approvalsByTahap['laporan']) ? $approvalsByTahap['laporan'] : collect();
-                            $laporanApprovedCount = $laporanApprovals->where('action', 'approved')->count();
-                            $laporanRejected = $laporanApprovals->where('action', 'rejected')->count() > 0;
+                            $laporanDisetujuiCount = $laporanApprovals->where('action', 'disetujui')->count();
+                            $laporanDitolak = $laporanApprovals->where('action', 'ditolak')->count() > 0;
 
                             // Cek ditolak dulu sebagai prioritas tertinggi
-                            if ($laporanRejected) {
+                            if ($laporanDitolak) {
                                 $laporanStatus = 'Ditolak';
                                 $laporanBadge = 'danger';
                                 $laporanDisabled = false;
-                            } elseif ($laporanApprovedCount >= 3) {
+                            } elseif ($laporanDisetujuiCount >= 3) {
                                 // Laporan sudah disetujui lengkap (selesai)
                                 $laporanStatus = 'Disetujui';
                                 $laporanBadge = 'success';
@@ -259,11 +259,11 @@
                                 $laporanStatus = 'Belum Upload';
                                 $laporanBadge = 'secondary';
                                 $laporanDisabled = true;
-                            } elseif ($kegiatan->tahap === 'laporan' && $kegiatan->status === 'submitted') {
+                            } elseif ($kegiatan->tahap === 'laporan' && $kegiatan->status === 'dikirim') {
                                 $laporanStatus = 'Progress';
                                 $laporanBadge = 'info';
                                 $laporanDisabled = false;
-                            } elseif ($kegiatan->tahap === 'laporan' && $kegiatan->status === 'revision') {
+                            } elseif ($kegiatan->tahap === 'laporan' && $kegiatan->status === 'revisi') {
                                 $laporanStatus = 'Revisi';
                                 $laporanBadge = 'warning';
                                 $laporanDisabled = false;
@@ -341,11 +341,11 @@
                                     @elseif($isCurrent)
                                         @if($kegiatan->status === 'draft')
                                             <span class="badge bg-secondary">Draft</span>
-                                        @elseif($kegiatan->status === 'submitted')
+                                        @elseif($kegiatan->status === 'dikirim')
                                             <span class="badge bg-info">Dalam Review</span>
-                                        @elseif($kegiatan->status === 'revision')
+                                        @elseif($kegiatan->status === 'revisi')
                                             <span class="badge bg-warning">Perlu Revisi</span>
-                                        @elseif($kegiatan->status === 'rejected')
+                                        @elseif($kegiatan->status === 'ditolak')
                                             <span class="badge bg-danger">Ditolak</span>
                                         @else
                                             <span class="badge bg-primary">Aktif</span>

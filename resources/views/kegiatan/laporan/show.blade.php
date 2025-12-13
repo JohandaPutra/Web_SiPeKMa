@@ -45,7 +45,7 @@
                 <div class="row mb-3">
                     <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Kegiatan:</strong></div>
                     <div class="col-12 col-sm-8">
-                        <span class="badge bg-label-info">{{ ucfirst($kegiatan->jenis_kegiatan) }}</span>
+                        <span class="badge bg-label-info">{{ $kegiatan->jenisKegiatan->nama ?? '-' }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -66,7 +66,7 @@
                 <div class="row mb-3">
                     <div class="col-12 col-sm-4 mb-1 mb-sm-0"><strong>Jenis Pendanaan:</strong></div>
                     <div class="col-12 col-sm-8">
-                        <span class="badge bg-label-primary">{{ ucfirst($kegiatan->jenis_pendanaan) }}</span>
+                        <span class="badge bg-label-primary">{{ $kegiatan->jenisPendanaan->nama ?? '-' }}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -169,26 +169,26 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="d-flex">
                                 <div class="flex-shrink-0 me-3">
-                                    @if($history->action === 'approved')
+                                    @if($history->action === 'disetujui')
                                     <span class="badge bg-success p-2">
                                         <i class="bx bx-check"></i>
                                     </span>
-                                    @elseif($history->action === 'rejected')
+                                    @elseif($history->action === 'ditolak')
                                     <span class="badge bg-danger p-2">
                                         <i class="bx bx-x"></i>
                                     </span>
                                     @else
                                     <span class="badge bg-warning p-2">
-                                        <i class="bx bx-revision"></i>
+                                        <i class="bx bx-Revisi"></i>
                                     </span>
                                     @endif
                                 </div>
                                 <div>
                                     <h6 class="mb-1">
                                         {{ match($history->action) {
-                                            'approved' => 'Disetujui',
-                                            'rejected' => 'Ditolak',
-                                            'revision' => 'Minta Revisi',
+                                            'disetujui' => 'Disetujui',
+                                            'ditolak' => 'Ditolak',
+                                            'revisi' => 'Minta Revisi',
                                             default => ucfirst($history->action)
                                         } }}
                                         oleh {{ $history->approver->role->display_name }}
@@ -229,27 +229,27 @@
                 @php
                 // Cek approval histories untuk tahap laporan
                 $laporanApprovals = $kegiatan->approvalHistories->where('tahap', 'laporan');
-                $laporanApprovedCount = $laporanApprovals->where('action', 'approved')->count();
-                $laporanRejected = $laporanApprovals->where('action', 'rejected')->count() > 0;
-                $laporanRejectedHistory = $laporanRejected ? $laporanApprovals->where('action', 'rejected')->first() : null;
-                $laporanCompleted = $laporanApprovedCount >= 3 && !$laporanRejected;
-                $laporanRevision = $kegiatan->tahap === 'laporan' && $kegiatan->status === 'revision';
-                $laporanSubmitted = $kegiatan->tahap === 'laporan' && $kegiatan->status === 'submitted';
+                $laporanApprovedCount = $laporanApprovals->where('action', 'disetujui')->count();
+                $laporanDitolak = $laporanApprovals->where('action', 'ditolak')->count() > 0;
+                $laporanDitolakHistory = $laporanDitolak ? $laporanApprovals->where('action', 'ditolak')->first() : null;
+                $laporanCompleted = $laporanApprovedCount >= 3 && !$laporanDitolak;
+                $laporanRevisi = $kegiatan->tahap === 'laporan' && $kegiatan->status === 'revisi';
+                $laporanDikirim = $kegiatan->tahap === 'laporan' && $kegiatan->status === 'dikirim';
                 $laporanDraft = $kegiatan->tahap === 'laporan' && $kegiatan->status === 'draft';
                 @endphp
 
-                @if($laporanRejected)
+                @if($laporanDitolak)
                 <div class="alert alert-danger">
                     <i class="bx bx-x-circle me-2"></i>
                     <strong>Laporan Ditolak</strong>
-                    @if($laporanRejectedHistory)
+                    @if($laporanDitolakHistory)
                     <p class="mb-0 mt-2">
-                        Ditolak oleh <strong>{{ $laporanRejectedHistory->approver->role->display_name }}</strong>
-                        pada {{ $laporanRejectedHistory->approved_at->format('d M Y H:i') }}
+                        Ditolak oleh <strong>{{ $laporanDitolakHistory->approver->role->display_name }}</strong>
+                        pada {{ $laporanDitolakHistory->approved_at->format('d M Y H:i') }}
                     </p>
-                    @if($laporanRejectedHistory->comment)
+                    @if($laporanDitolakHistory->comment)
                     <div class="alert alert-light mt-2 mb-0">
-                        <small><strong>Alasan:</strong> {{ $laporanRejectedHistory->comment }}</small>
+                        <small><strong>Alasan:</strong> {{ $laporanDitolakHistory->comment }}</small>
                     </div>
                     @endif
                     @else
@@ -262,7 +262,7 @@
                     <strong>Laporan Disetujui!</strong>
                     <p class="mb-0 mt-2">Semua tahap persetujuan laporan telah selesai. Kegiatan telah selesai.</p>
                 </div>
-                @elseif($laporanRevision)
+                @elseif($laporanRevisi)
                 <div class="alert alert-warning">
                     <i class="bx bx-error me-2"></i>
                     <strong>Perlu Revisi</strong>
@@ -274,7 +274,7 @@
                     <strong>Draft</strong>
                     <p class="mb-0 mt-2">LPJ belum disubmit.</p>
                 </div>
-                @elseif($laporanSubmitted)
+                @elseif($laporanDikirim)
                 <div class="alert alert-info">
                     <i class="bx bx-time me-2"></i>
                     <strong>Menunggu Persetujuan</strong>
@@ -294,7 +294,7 @@
                     <label class="form-label mb-2">Progress Approval Laporan:</label>
                     @php
                     // Hitung progress berdasarkan approval yang sudah ada untuk tahap laporan
-                    if ($laporanRejected) {
+                    if ($laporanDitolak) {
                         $progress = 0; // Ditolak, progress 0
                         $progressColor = 'danger';
                     } elseif ($laporanApprovedCount >= 3) {
@@ -306,7 +306,7 @@
                     } elseif ($laporanApprovedCount == 1) {
                         $progress = 33; // Pembina approved, menunggu Kaprodi
                         $progressColor = 'success';
-                    } elseif ($kegiatan->tahap === 'laporan' && $kegiatan->status === 'submitted') {
+                    } elseif ($kegiatan->tahap === 'laporan' && $kegiatan->status === 'dikirim') {
                         $progress = 10; // Sudah submit, menunggu Pembina
                         $progressColor = 'info';
                     } else {
@@ -338,12 +338,12 @@
             </div>
             <div class="card-body">
                 <!-- Info jika laporan sudah selesai -->
-                @if($laporanCompleted && !$laporanRejected)
+                @if($laporanCompleted && !$laporanDitolak)
                 <div class="alert alert-success mb-2">
                     <strong><i class="bx bx-check-circle me-1"></i> Laporan Disetujui!</strong>
                     <p class="mb-2 small">Kegiatan telah selesai. Terima kasih atas partisipasinya.</p>
                 </div>
-                @elseif($laporanRejected)
+                @elseif($laporanDitolak)
                 <div class="alert alert-danger mb-2">
                     <strong><i class="bx bx-x-circle me-1"></i> Laporan Ditolak</strong>
                     <p class="mb-2 small">Silakan periksa komentar reviewer untuk informasi lebih lanjut.</p>
@@ -351,7 +351,7 @@
                 @endif
 
                 <!-- Tombol aksi hanya muncul jika laporan masih aktif (belum selesai) -->
-                @if(!$laporanCompleted && !$laporanRejected)
+                @if(!$laporanCompleted && !$laporanDitolak)
                     @if($kegiatan->status === 'draft')
                         @if($laporanFile)
                         <!-- Submit Button -->
@@ -384,7 +384,7 @@
                         </a>
                         @endif
 
-                    @elseif($kegiatan->status === 'revision')
+                    @elseif($kegiatan->status === 'revisi')
                     <!-- Submit Button (jika ada file) -->
                     @if($laporanFile)
                     <form action="{{ route('kegiatan.laporan.submit', $kegiatan) }}" method="POST" class="mb-2">
@@ -395,7 +395,7 @@
                         </button>
                     </form>
                     @endif
-                    
+
                     <!-- Edit Button -->
                     <a href="{{ route('kegiatan.laporan.upload', $kegiatan) }}" class="btn btn-warning w-100 mb-2">
                         <i class="bx bx-edit me-1"></i> {{ $laporanFile ? 'Edit & Upload Ulang LPJ' : 'Upload LPJ' }}
@@ -417,7 +417,7 @@
             !Auth::user()->isHima() &&
             $kegiatan->current_approver_role === Auth::user()->role->name &&
             $kegiatan->tahap === 'laporan' &&
-            $kegiatan->status === 'submitted'
+            $kegiatan->status === 'dikirim'
         )
         <div class="card mb-4">
             <div class="card-header">
@@ -427,8 +427,8 @@
                 <button type="button" class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#approveModal">
                     <i class="bx bx-check me-1"></i> Setujui
                 </button>
-                <button type="button" class="btn btn-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#revisionModal">
-                    <i class="bx bx-revision me-1"></i> Minta Revisi
+                <button type="button" class="btn btn-warning w-100 mb-2" data-bs-toggle="modal" data-bs-target="#RevisiModal">
+                    <i class="bx bx-Revisi me-1"></i> Minta Revisi
                 </button>
                 <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
                     <i class="bx bx-x me-1"></i> Tolak

@@ -48,11 +48,12 @@ use App\Http\Controllers\pages\AccountSettingsNotifications;
 use App\Http\Controllers\authentications\ForgotPasswordBasic;
 use App\Http\Controllers\user_interface\PaginationBreadcrumbs;
 
-// Auth Routes untuk Testing
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::post('/quick-login', [AuthController::class, 'quickLogin'])->name('quick-login');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+// Authentication Routes
+use App\Http\Controllers\Auth\LoginController;
+
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 // Main Page Route - redirect to login if not authenticated
 Route::get('/', function () {
@@ -64,6 +65,11 @@ Route::get('/', function () {
 
 // Dashboard Route - protected by auth
 Route::get('/dashboard', [Analytics::class, 'index'])->middleware('auth')->name('dashboard-analytics');
+
+// Alias route dengan name 'dashboard' untuk backward compatibility
+Route::get('/dashboard-old', function () {
+    return redirect()->route('dashboard-analytics');
+})->name('dashboard');
 
 // layout
 Route::get('/layouts/without-menu', [WithoutMenu::class, 'index'])->name('layouts-without-menu');
@@ -126,9 +132,15 @@ Route::get('/form/layouts-horizontal', [HorizontalForm::class, 'index'])->name('
 // tables
 Route::get('/tables/basic', [TablesBasic::class, 'index'])->name('tables-basic');
 
-// Users routes - protected by auth
-Route::middleware('auth')->group(function () {
-    Route::get('/users', [UsersController::class, 'index'])->name('users.index');
+// Pengaturan routes - protected by auth and admin/wadek middleware
+Route::middleware(['auth', 'admin.or.wadek'])->group(function () {
+    // Kelola User
+    Route::resource('prodi', App\Http\Controllers\ProdiController::class);
+    Route::resource('users', UsersController::class);
+
+    // Kelola Kegiatan
+    Route::resource('jenis-kegiatan', App\Http\Controllers\JenisKegiatanController::class);
+    Route::resource('jenis-pendanaan', App\Http\Controllers\JenisPendanaanController::class);
 });
 
 // Usulan Kegiatan routes (tanpa auth untuk testing - DEPRECATED, will be removed)
@@ -137,7 +149,7 @@ Route::resource('usulan-kegiatan', UsulanKegiatanController::class);
 // Kegiatan routes dengan middleware auth dan role
 use App\Http\Controllers\KegiatanController;
 
-Route::middleware(['auth', 'role:hima,pembina_hima,kaprodi,wadek_iii'])->group(function () {
+Route::middleware(['auth', 'role:admin,hima,pembina_hima,kaprodi,wadek_iii'])->group(function () {
     // Riwayat Kegiatan routes
     Route::get('kegiatan/riwayat', [KegiatanController::class, 'riwayat'])->name('kegiatan.riwayat');
     Route::get('kegiatan/riwayat/{kegiatan}', [KegiatanController::class, 'showRiwayat'])->name('kegiatan.riwayat.show');
@@ -147,8 +159,8 @@ Route::middleware(['auth', 'role:hima,pembina_hima,kaprodi,wadek_iii'])->group(f
     // Additional routes untuk approval workflow
     Route::post('kegiatan/{kegiatan}/submit', [KegiatanController::class, 'submit'])->name('kegiatan.submit');
     Route::post('kegiatan/{kegiatan}/approve', [KegiatanController::class, 'approve'])->name('kegiatan.approve');
-    Route::post('kegiatan/{kegiatan}/revision', [KegiatanController::class, 'revision'])->name('kegiatan.revision');
-    Route::post('kegiatan/{kegiatan}/reject', [KegiatanController::class, 'reject'])->name('kegiatan.reject');
+    Route::post('kegiatan/{kegiatan}/revisi', [KegiatanController::class, 'revisi'])->name('kegiatan.revisi');
+    Route::post('kegiatan/{kegiatan}/tolak', [KegiatanController::class, 'tolak'])->name('kegiatan.tolak');
 
     // Proposal routes
     Route::get('proposal', [KegiatanController::class, 'indexProposal'])->name('kegiatan.proposal.index');
