@@ -151,6 +151,7 @@ use App\Http\Controllers\KegiatanController;
 
 Route::middleware(['auth', 'role:admin,hima,pembina_hima,kaprodi,wadek_iii'])->group(function () {
     // Riwayat Kegiatan routes
+    Route::get('kegiatan/riwayat/export', [KegiatanController::class, 'export'])->name('kegiatan.riwayat.export');
     Route::get('kegiatan/riwayat', [KegiatanController::class, 'riwayat'])->name('kegiatan.riwayat');
     Route::get('kegiatan/riwayat/{kegiatan}', [KegiatanController::class, 'showRiwayat'])->name('kegiatan.riwayat.show');
 

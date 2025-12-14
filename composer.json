@@ -11,6 +11,7 @@
     "php": "^8.2",
     "laravel/framework": "^11.0",
     "laravel/tinker": "^2.9",
+    "rap2hpoutre/fast-excel": "^5.6",
     "yajra/laravel-datatables": "^11.0"
   },
   "require-dev": {

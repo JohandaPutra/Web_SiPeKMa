@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Kegiatan;
 use App\Models\KegiatanFile;
 use App\Models\ApprovalHistory;
+use App\Exports\KegiatanExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Rap2hpoutre\FastExcel\FastExcel;
 
 class KegiatanController extends Controller
 {
@@ -42,8 +44,8 @@ class KegiatanController extends Controller
             $query->where('nama_kegiatan', 'like', '%' . request('search') . '%');
         }
 
-        if (request('prodi_id')) {
-            $query->where('prodi_id', request('prodi_id'));
+        if (request('status')) {
+            $query->where('status', request('status'));
         }
 
         if (request('tahap')) {
@@ -61,13 +63,7 @@ class KegiatanController extends Controller
             $kegiatans = $query->paginate((int)$perPage)->appends(request()->query());
         }
 
-        // Ambil list prodi untuk filter (untuk Super Admin dan Wadek III)
-        $prodis = collect();
-        if ($user->isSuperAdmin() || $user->isWadek()) {
-            $prodis = \App\Models\Prodi::orderBy('nama_prodi')->get();
-        }
-
-        return view('kegiatan.riwayat.index', compact('kegiatans', 'prodis'));
+        return view('kegiatan.riwayat.index', compact('kegiatans'));
     }
 
     /**
@@ -77,14 +73,13 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Super Admin & Wadek III can access all, others restricted by prodi
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
-            if ($user->isHima() || $user->isPembina() || $user->isKaprodi()) {
-                if ($kegiatan->prodi_id !== $user->prodi_id) {
-                    abort(403, 'Anda tidak memiliki akses ke kegiatan prodi ini.');
-                }
+        // Validasi akses - Hima, Pembina, Kaprodi hanya bisa lihat kegiatan di prodi mereka
+        if ($user->isHima() || $user->isPembina() || $user->isKaprodi()) {
+            if ($kegiatan->prodi_id !== $user->prodi_id) {
+                abort(403, 'Unauthorized');
             }
         }
+        // Wadek III bisa lihat semua
 
         // Load semua relasi
         $kegiatan->load(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories.approver', 'files']);
@@ -299,15 +294,13 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Check permission - Super Admin & Wadek III can access all
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
-            if ($user->isHima() && $kegiatan->user_id !== $user->id) {
-                abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
-            }
+        // Check permission
+        if ($user->isHima() && $kegiatan->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
+        }
 
-            if (($user->isPembina() || $user->isKaprodi()) && $kegiatan->prodi_id !== $user->prodi_id) {
-                abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
-            }
+        if (($user->isPembina() || $user->isKaprodi()) && $kegiatan->prodi_id !== $user->prodi_id) {
+            abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
         }
 
         $kegiatan->load(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories.approver.role']);
@@ -322,11 +315,9 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Super Admin & Wadek III can edit all, otherwise only HIMA who owns it
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
-            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-                abort(403, 'Anda tidak memiliki akses untuk mengedit kegiatan ini.');
-            }
+        // Hanya Hima pemilik yang bisa edit, dan hanya saat draft atau revision
+        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit kegiatan ini.');
         }
 
         if (!in_array($kegiatan->status, ['draft', 'revisi'])) {
@@ -347,11 +338,8 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Super Admin & Wadek III can update all, otherwise only HIMA who owns it
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
-            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-                return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengedit kegiatan ini.');
-            }
+        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengedit kegiatan ini.');
         }
 
         if (!in_array($kegiatan->status, ['draft', 'revisi'])) {
@@ -396,11 +384,9 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Super Admin & Wadek III can delete all, otherwise only HIMA who owns it
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
-            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-                return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus kegiatan ini.');
-            }
+        // Hanya Hima pemilik yang bisa delete, dan hanya saat draft
+        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus kegiatan ini.');
         }
 
         if ($kegiatan->status !== 'draft') {
@@ -424,11 +410,8 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Super Admin & Wadek III can submit all, otherwise only HIMA who owns it
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
-            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-                return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
-            }
+        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
         }
 
         if (!in_array($kegiatan->status, ['draft', 'revisi'])) {
@@ -708,13 +691,13 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Check access - Super Admin & Wadek III can access all
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+        // Check access
+        if (!$user->isSuperAdmin()) {
             if ($user->isHima() && $kegiatan->user_id !== $user->id) {
                 abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
             }
 
-            if (!$user->isHima() && $kegiatan->prodi_id !== $user->prodi_id) {
+            if (!$user->isWadek() && !$user->isHima() && $kegiatan->prodi_id !== $user->prodi_id) {
                 abort(403, 'Anda tidak memiliki akses ke kegiatan prodi ini.');
             }
         }
@@ -735,11 +718,9 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Super Admin & Wadek III can upload all, otherwise only HIMA who owns it
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
-            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-                abort(403, 'Anda tidak memiliki akses untuk mengupload proposal.');
-            }
+        // Hanya Hima pemilik yang bisa upload
+        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk mengupload proposal.');
         }
 
         // Cek kondisi upload:
@@ -776,11 +757,8 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Super Admin & Wadek III can upload all, otherwise only HIMA who owns it
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
-            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-                return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
-            }
+        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
         }
 
         $request->validate([
@@ -989,9 +967,9 @@ class KegiatanController extends Controller
                 ->with('error', 'Kegiatan ini belum masuk tahap pendanaan.');
         }
 
-        // Check access - Super Admin & Wadek III full access
+        // Check access
         $hasAccess = false;
-        if ($user->isSuperAdmin() || $user->isWadek()) {
+        if ($user->isSuperAdmin()) {
             $hasAccess = true;
         } elseif ($user->isHima() && $kegiatan->user_id === $user->id) {
             $hasAccess = true;
@@ -999,6 +977,8 @@ class KegiatanController extends Controller
             $hasAccess = true;
         } elseif ($user->isKaprodi() && $kegiatan->prodi_id === $user->prodi_id) {
             $hasAccess = in_array($kegiatan->current_approver_role, ['kaprodi', 'wadek_iii', 'completed']);
+        } elseif ($user->isWadek()) {
+            $hasAccess = in_array($kegiatan->current_approver_role, ['wadek_iii', 'completed']);
         }
 
         if (!$hasAccess) {
@@ -1022,11 +1002,8 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Super Admin & Wadek III can upload all, otherwise only HIMA who owns it
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
-            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-                return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
-            }
+        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
         }
 
         // Cek kondisi upload:
@@ -1063,11 +1040,8 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Super Admin & Wadek III can upload all, otherwise only HIMA who owns it
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
-            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-                return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
-            }
+        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
         }
 
         $request->validate([
@@ -1277,13 +1251,13 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Check access - Super Admin & Wadek III can access all
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
+        // Check access
+        if (!$user->isSuperAdmin()) {
             if ($user->isHima() && $kegiatan->user_id !== $user->id) {
                 return redirect()->route('kegiatan.laporan.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
             }
 
-            if (!$user->isHima() && $kegiatan->prodi_id !== $user->prodi_id) {
+            if (!$user->isWadek() && !$user->isHima() && $kegiatan->prodi_id !== $user->prodi_id) {
                 return redirect()->route('kegiatan.laporan.index')->with('error', 'Anda tidak memiliki akses ke laporan prodi ini.');
             }
         }
@@ -1304,11 +1278,9 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Super Admin & Wadek III can upload all, otherwise only HIMA who owns it
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
-            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-                return redirect()->route('kegiatan.laporan.index')->with('error', 'Anda tidak memiliki akses untuk mengupload laporan.');
-            }
+        // Only Hima who owns the kegiatan can upload
+        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+            return redirect()->route('kegiatan.laporan.index')->with('error', 'Anda tidak memiliki akses untuk mengupload laporan.');
         }
 
         // Must be in laporan tahap
@@ -1334,11 +1306,9 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Super Admin & Wadek III can upload all, otherwise only HIMA who owns it
-        if (!$user->isSuperAdmin() && !$user->isWadek()) {
-            if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
-                return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
-            }
+        // Validate ownership
+        if (!$user->isHima() || $kegiatan->user_id !== $user->id) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses.');
         }
 
         // Validate status
@@ -1474,5 +1444,40 @@ class KegiatanController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menghapus file: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Export kegiatan to Excel/CSV
+     */
+    public function export(Request $request)
+    {
+        $filters = $request->only([
+            'search',
+            'status',
+            'tahap',
+            'prodi_id',
+            'jenis_kegiatan_id',
+            'jenis_pendanaan_id',
+            'date_from',
+            'date_to'
+        ]);
+
+        $filename = 'kegiatan_' . date('Y-m-d_His');
+        
+        // Get filtered data
+        $exporter = new KegiatanExport($filters);
+        $kegiatans = $exporter->collection();
+        
+        // Map data
+        $data = $kegiatans->map(function ($kegiatan, $index) use ($exporter) {
+            return $exporter->map($kegiatan, $index);
+        });
+        
+        // Determine export type (default to xlsx)
+        $type = $request->get('export_type', 'xlsx');
+        $extension = $type === 'csv' ? 'csv' : 'xlsx';
+        
+        // Export using FastExcel
+        return (new FastExcel($data))->download($filename . '.' . $extension);
     }
 }

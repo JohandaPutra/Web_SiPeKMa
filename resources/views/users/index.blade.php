@@ -36,8 +36,6 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <!-- Tombol export -->
-                    <div id="export-buttons"></div>
                     <!-- Tombol Add New User -->
                     <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
                         <i class="bx bx-plus me-1"></i>
@@ -123,43 +121,7 @@
                 }
             });
 
-            // Tempatkan tombol di card header
-            var exportButtons = new $.fn.dataTable.Buttons(table, {
-                buttons: [{
-                    extend: 'collection',
-                    className: 'btn btn-outline-primary btn-sm dropdown-toggle',
-                    text: '<i class="bx bx-export me-1"></i> Export',
-                    buttons: [{
-                            extend: 'print',
-                            text: '<i class="bx bx-printer me-1"></i> Print',
-                            className: 'dropdown-item',
-                        },
-                        {
-                            extend: 'csv',
-                            text: '<i class="bx bx-file me-1"></i> CSV',
-                            className: 'dropdown-item',
-                        },
-                        {
-                            extend: 'excel',
-                            text: '<i class="bx bx-file me-1"></i> Excel',
-                            className: 'dropdown-item',
-                        },
-                        {
-                            extend: 'pdf',
-                            text: '<i class="bx bx-file me-1"></i> PDF',
-                            className: 'dropdown-item',
-                        },
-                        {
-                            extend: 'copy',
-                            text: '<i class="bx bx-copy me-1"></i> Copy',
-                            className: 'dropdown-item',
-                        }
-                    ]
-                }]
-            });
 
-            // Pindahkan komponen DataTable ke container yang sudah ditentukan
-            exportButtons.container().appendTo('#export-buttons');
 
             // Kostum style untuk select
             $('.dataTables_wrapper .dataTables_filter input').addClass('form-control form-control-sm ms-2');

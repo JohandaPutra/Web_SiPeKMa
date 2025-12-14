@@ -44,27 +44,7 @@ Navigasi menggunakan **JSON-driven**, bukan berbasis route:
 - Template Blade di `resources/views/layouts/sections/menu/verticalMenu.blade.php` merender menu secara rekursif
 - **Pola**: Item menu menggunakan field `slug` (string atau array) untuk mencocokkan state aktif dengan nama route
 - **Menu selalu terbuka**: Set `"alwaysopen": true` untuk submenu yang terbuka secara default
-- **Role-based visibility**: Gunakan field `"roles": ["admin", "wadek_iii"]` untuk restrict menu
 - Saat menambah fitur baru: update `verticalMenu.json` terlebih dahulu, kemudian buat routes/controllers
-
-**Current Menu Structure:**
-```
-Dashboard
-Kegiatan (semua role)
-├── Riwayat Kegiatan
-├── Usulan Kegiatan  
-├── Proposal Kegiatan
-├── Pendanaan Kegiatan
-└── Laporan Kegiatan
-
-PENGATURAN (admin & wadek_iii only)
-├── Kelola User
-│   ├── Prodi
-│   └── User
-└── Kelola Kegiatan
-    ├── Jenis Kegiatan
-    └── Jenis Pendanaan
-```
 
 ### Sistem Notifikasi Toast
 
@@ -214,30 +194,6 @@ Kegiatan memiliki alur status (`draft` → `submitted` → `review` → `approve
 5. Update `resources/menu/verticalMenu.json` dengan entry menu baru
 6. Buat folder view: `resources/views/feature-name/` dengan `index.blade.php`, dll.
 7. (Opsional) Buat DataTable: `php artisan datatables:make FeatureDataTable`
-
-**Contoh CRUD dengan Pagination Sederhana (Pattern: Prodi, JenisKegiatan, JenisPendanaan):**
-```php
-// Controller
-public function index() {
-    $items = Model::paginate(10);
-    return view('folder.index', compact('items'));
-}
-
-// View
-<table class="table">
-  <tbody>
-    @forelse($items as $index => $item)
-      <tr>
-        <td>{{ $items->firstItem() + $index }}</td>
-        <td>{{ $item->nama }}</td>
-      </tr>
-    @empty
-      <tr><td colspan="5" class="text-center">Tidak ada data</td></tr>
-    @endforelse
-  </tbody>
-</table>
-{{ $items->links() }}
-```
 
 ### Kustomisasi Menu
 
