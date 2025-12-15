@@ -106,7 +106,7 @@
                             <option value="all" {{ request('per_page', 10) == 'all' ? 'selected' : '' }}>Semua</option>
                         </select>
                     </form>
-                    
+
                     <!-- Export Buttons -->
                     <div class="btn-group" role="group">
                         <button type="button" class="btn btn-success btn-sm" onclick="exportData('xlsx')">
@@ -249,18 +249,18 @@ function exportData(type) {
     // Get current filter values from form
     const form = document.getElementById('filterForm');
     const formData = new FormData(form);
-    
+
     // Build query string
     const params = new URLSearchParams();
     params.append('export_type', type);
-    
+
     // Add all existing filters
     for (const [key, value] of formData.entries()) {
         if (value) {
             params.append(key, value);
         }
     }
-    
+
     // Redirect to export URL
     window.location.href = '{{ route("kegiatan.riwayat.export") }}?' + params.toString();
 }

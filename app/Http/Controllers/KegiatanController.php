@@ -24,8 +24,8 @@ class KegiatanController extends Controller
         $query = Kegiatan::with(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories.approver', 'files']);
 
         // Filter berdasarkan role
-        if ($user->isSuperAdmin()) {
-            // Super Admin melihat SEMUA kegiatan dari SEMUA prodi
+        if ($user->isSuperAdmin() || $user->isRegularAdmin()) {
+            // Super Admin dan Admin melihat SEMUA kegiatan dari SEMUA prodi
             // Tidak ada filter prodi_id
         } elseif ($user->isHima() || $user->isPembina() || $user->isKaprodi()) {
             // Hima, Pembina, dan Kaprodi melihat semua kegiatan di prodi mereka
@@ -114,8 +114,8 @@ class KegiatanController extends Controller
             });
 
         // Filter kegiatan tahap usulan saja
-        if ($user->isSuperAdmin()) {
-            // Super Admin melihat SEMUA usulan dari SEMUA prodi yang masih dalam proses
+        if ($user->isSuperAdmin() || $user->isRegularAdmin()) {
+            // Super Admin dan Admin melihat SEMUA usulan dari SEMUA prodi yang masih dalam proses
             // No additional filter needed
         } elseif ($user->isHima()) {
             // Hima melihat usulan yang dia buat (draft, dikirim, revisi)
@@ -179,8 +179,8 @@ class KegiatanController extends Controller
             });
 
         // Filter kegiatan tahap proposal berdasarkan role dan visibility
-        if ($user->isSuperAdmin()) {
-            // Super Admin melihat SEMUA proposal dari SEMUA prodi yang masih dalam proses
+        if ($user->isSuperAdmin() || $user->isRegularAdmin()) {
+            // Super Admin dan Admin melihat SEMUA proposal dari SEMUA prodi yang masih dalam proses
             // No additional filter needed
         } elseif ($user->isHima()) {
             // Hima melihat semua proposal yang dia buat (draft, dikirim, revisi)
@@ -294,13 +294,16 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Check permission
-        if ($user->isHima() && $kegiatan->user_id !== $user->id) {
-            abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
-        }
+        // Super Admin dan Admin memiliki akses penuh
+        if (!$user->isSuperAdmin() && !$user->isRegularAdmin()) {
+            // Check permission untuk role lain
+            if ($user->isHima() && $kegiatan->user_id !== $user->id) {
+                abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
+            }
 
-        if (($user->isPembina() || $user->isKaprodi()) && $kegiatan->prodi_id !== $user->prodi_id) {
-            abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
+            if (($user->isPembina() || $user->isKaprodi()) && $kegiatan->prodi_id !== $user->prodi_id) {
+                abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
+            }
         }
 
         $kegiatan->load(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan', 'approvalHistories.approver.role']);
@@ -443,37 +446,54 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Approve kegiatan (untuk Pembina, Kaprodi, Wadek)
+     * Approve kegiatan (untuk Pembina, Kaprodi, Wadek, Super Admin, dan Admin)
      */
     public function approve(Request $request, Kegiatan $kegiatan)
     {
         $user = Auth::user();
         $userRole = $user->role->name;
 
+        // Super Admin dan Admin dapat approve tanpa pembatasan
+        $isSuperAdminOrAdmin = $user->isSuperAdmin() || $user->isRegularAdmin();
+
         // Check if user has permission to approve
-        if ($kegiatan->current_approver_role !== $userRole) {
+        if (!$isSuperAdminOrAdmin && $kegiatan->current_approver_role !== $userRole) {
             return redirect()->back()->with('error', 'Anda tidak memiliki wewenang untuk menyetujui kegiatan ini saat ini.');
         }
 
-        // Check prodi access (except Wadek)
-        if (!$user->isWadek() && $kegiatan->prodi_id !== $user->prodi_id) {
+        // Check prodi access (except Wadek, Super Admin, and Admin)
+        if (!$isSuperAdminOrAdmin && !$user->isWadek() && $kegiatan->prodi_id !== $user->prodi_id) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses ke kegiatan prodi ini.');
         }
 
         try {
+            // Tentukan effective role untuk approval
+            // Super Admin bypass sebagai 'wadek_iii' (langsung completed)
+            // Admin biasa mengikuti current_approver_role atau role mereka
+            $effectiveRole = $userRole;
+            
+            if ($user->isSuperAdmin()) {
+                // Super Admin selalu bertindak sebagai Wadek III (approval terakhir)
+                $effectiveRole = 'wadek_iii';
+            } elseif ($user->isRegularAdmin()) {
+                // Admin menggunakan current_approver_role yang sedang menunggu
+                // Jika tidak ada current_approver_role, gunakan pembina_hima sebagai default
+                $effectiveRole = $kegiatan->current_approver_role ?? 'pembina_hima';
+            }
+            
             // Record approval history
             ApprovalHistory::create([
                 'kegiatan_id' => $kegiatan->id,
                 'approver_user_id' => $user->id,
-                'approver_role' => $userRole,
+                'approver_role' => $effectiveRole,
                 'tahap' => $kegiatan->tahap,
                 'action' => 'disetujui',
                 'comment' => $request->comment,
                 'approved_at' => now(),
             ]);
 
-            // Determine next approver
-            $nextApprover = match($userRole) {
+            // Determine next approver berdasarkan effective role
+            $nextApprover = match($effectiveRole) {
                 'pembina_hima' => 'kaprodi',
                 'kaprodi' => 'wadek_iii',
                 'wadek_iii' => 'completed',
@@ -546,9 +566,9 @@ class KegiatanController extends Controller
                 $message = "{$tahapName} berhasil disetujui. Menunggu persetujuan {$nextApproverName}.";
             }
 
-            // Redirect berdasarkan tahap - kembali ke index untuk Wadek, show untuk approver lain
-            if ($userRole === 'wadek_iii') {
-                // Wadek III kembali ke index tahap yang baru saja disetujui (SEBELUM pindah tahap)
+            // Redirect berdasarkan tahap - kembali ke index untuk Wadek/Admin/Super Admin, show untuk approver lain
+            if ($userRole === 'wadek_iii' || $isSuperAdminOrAdmin) {
+                // Wadek III, Admin, Super Admin kembali ke index tahap yang baru saja disetujui (SEBELUM pindah tahap)
                 $redirectTahap = match($currentTahap ?? $kegiatan->tahap) {
                     'usulan' => 'kegiatan.index',
                     'proposal' => 'kegiatan.proposal.index',
@@ -558,7 +578,7 @@ class KegiatanController extends Controller
                 };
                 return redirect()->route($redirectTahap)->with('success', $message);
             } else {
-                // Pembina/Kaprodi/Wadek tetap ke show page sesuai tahap
+                // Pembina/Kaprodi tetap ke show page sesuai tahap
                 $redirectRoute = match($kegiatan->tahap) {
                     'usulan' => 'kegiatan.show',
                     'proposal' => 'kegiatan.proposal.show',
@@ -574,7 +594,7 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Request revisi (untuk Pembina, Kaprodi, Wadek)
+     * Request revisi (untuk Pembina, Kaprodi, Wadek, Super Admin, dan Admin)
      */
     public function revisi(Request $request, Kegiatan $kegiatan)
     {
@@ -585,22 +605,36 @@ class KegiatanController extends Controller
             'comment' => 'required|string',
         ]);
 
+        // Super Admin dan Admin dapat meminta revisi tanpa pembatasan
+        $isSuperAdminOrAdmin = $user->isSuperAdmin() || $user->isRegularAdmin();
+
         // Check if user has permission
-        if ($kegiatan->current_approver_role !== $userRole) {
+        if (!$isSuperAdminOrAdmin && $kegiatan->current_approver_role !== $userRole) {
             return redirect()->back()->with('error', 'Anda tidak memiliki wewenang untuk meminta revisi saat ini.');
         }
 
-        // Check prodi access (except Wadek)
-        if (!$user->isWadek() && $kegiatan->prodi_id !== $user->prodi_id) {
+        // Check prodi access (except Wadek, Super Admin, and Admin)
+        if (!$isSuperAdminOrAdmin && !$user->isWadek() && $kegiatan->prodi_id !== $user->prodi_id) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses ke kegiatan prodi ini.');
         }
 
         try {
+            // Tentukan effective role untuk revisi
+            $effectiveRole = $userRole;
+            
+            if ($user->isSuperAdmin()) {
+                // Super Admin selalu bertindak sebagai Wadek III
+                $effectiveRole = 'wadek_iii';
+            } elseif ($user->isRegularAdmin()) {
+                // Admin menggunakan current_approver_role yang sedang menunggu
+                $effectiveRole = $kegiatan->current_approver_role ?? 'pembina_hima';
+            }
+            
             // Record approval history
             ApprovalHistory::create([
                 'kegiatan_id' => $kegiatan->id,
                 'approver_user_id' => $user->id,
-                'approver_role' => $userRole,
+                'approver_role' => $effectiveRole,
                 'tahap' => $kegiatan->tahap,
                 'action' => 'revisi',
                 'comment' => $request->comment,
@@ -630,7 +664,7 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Tolak kegiatan (untuk Pembina, Kaprodi, Wadek)
+     * Tolak kegiatan (untuk Pembina, Kaprodi, Wadek, Super Admin, dan Admin)
      */
     public function tolak(Request $request, Kegiatan $kegiatan)
     {
@@ -641,22 +675,36 @@ class KegiatanController extends Controller
             'comment' => 'required|string',
         ]);
 
+        // Super Admin dan Admin dapat menolak tanpa pembatasan
+        $isSuperAdminOrAdmin = $user->isSuperAdmin() || $user->isRegularAdmin();
+
         // Check if user has permission
-        if ($kegiatan->current_approver_role !== $userRole) {
+        if (!$isSuperAdminOrAdmin && $kegiatan->current_approver_role !== $userRole) {
             return redirect()->back()->with('error', 'Anda tidak memiliki wewenang untuk menolak kegiatan ini saat ini.');
         }
 
-        // Check prodi access (except Wadek)
-        if (!$user->isWadek() && $kegiatan->prodi_id !== $user->prodi_id) {
+        // Check prodi access (except Wadek, Super Admin, and Admin)
+        if (!$isSuperAdminOrAdmin && !$user->isWadek() && $kegiatan->prodi_id !== $user->prodi_id) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses ke kegiatan prodi ini.');
         }
 
         try {
+            // Tentukan effective role untuk penolakan
+            $effectiveRole = $userRole;
+            
+            if ($user->isSuperAdmin()) {
+                // Super Admin selalu bertindak sebagai Wadek III
+                $effectiveRole = 'wadek_iii';
+            } elseif ($user->isRegularAdmin()) {
+                // Admin menggunakan current_approver_role yang sedang menunggu
+                $effectiveRole = $kegiatan->current_approver_role ?? 'pembina_hima';
+            }
+            
             // Record approval history
             ApprovalHistory::create([
                 'kegiatan_id' => $kegiatan->id,
                 'approver_user_id' => $user->id,
-                'approver_role' => $userRole,
+                'approver_role' => $effectiveRole,
                 'tahap' => $kegiatan->tahap,
                 'action' => 'ditolak',
                 'comment' => $request->comment,
@@ -691,8 +739,8 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Check access
-        if (!$user->isSuperAdmin()) {
+        // Check access - Super Admin dan Admin memiliki akses penuh
+        if (!$user->isSuperAdmin() && !$user->isRegularAdmin()) {
             if ($user->isHima() && $kegiatan->user_id !== $user->id) {
                 abort(403, 'Anda tidak memiliki akses ke kegiatan ini.');
             }
@@ -907,8 +955,8 @@ class KegiatanController extends Controller
             });
 
         // Filter kegiatan tahap pendanaan dengan progressive visibility
-        if ($user->isSuperAdmin()) {
-            // Super Admin melihat SEMUA pendanaan dari SEMUA prodi yang masih dalam proses
+        if ($user->isSuperAdmin() || $user->isRegularAdmin()) {
+            // Super Admin dan Admin melihat SEMUA pendanaan dari SEMUA prodi yang masih dalam proses
             // No additional filter needed
         } elseif ($user->isHima()) {
             // Hima melihat semua pendanaan yang dia buat (draft, dikirim, revisi)
@@ -969,7 +1017,7 @@ class KegiatanController extends Controller
 
         // Check access
         $hasAccess = false;
-        if ($user->isSuperAdmin()) {
+        if ($user->isSuperAdmin() || $user->isRegularAdmin()) {
             $hasAccess = true;
         } elseif ($user->isHima() && $kegiatan->user_id === $user->id) {
             $hasAccess = true;
@@ -1198,8 +1246,8 @@ class KegiatanController extends Controller
             });
 
         // Filter kegiatan tahap laporan berdasarkan role dan visibility
-        if ($user->isSuperAdmin()) {
-            // Super Admin melihat SEMUA laporan dari SEMUA prodi yang masih dalam proses
+        if ($user->isSuperAdmin() || $user->isRegularAdmin()) {
+            // Super Admin dan Admin melihat SEMUA laporan dari SEMUA prodi yang masih dalam proses
             // No additional filter needed
         } elseif ($user->isHima()) {
             // Hima melihat laporan yang dia buat (draft, dikirim, revisi)
@@ -1251,8 +1299,8 @@ class KegiatanController extends Controller
     {
         $user = Auth::user();
 
-        // Check access
-        if (!$user->isSuperAdmin()) {
+        // Check access - Super Admin dan Admin memiliki akses penuh
+        if (!$user->isSuperAdmin() && !$user->isRegularAdmin()) {
             if ($user->isHima() && $kegiatan->user_id !== $user->id) {
                 return redirect()->route('kegiatan.laporan.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
             }
@@ -1463,20 +1511,20 @@ class KegiatanController extends Controller
         ]);
 
         $filename = 'kegiatan_' . date('Y-m-d_His');
-        
+
         // Get filtered data
         $exporter = new KegiatanExport($filters);
         $kegiatans = $exporter->collection();
-        
+
         // Map data
         $data = $kegiatans->map(function ($kegiatan, $index) use ($exporter) {
             return $exporter->map($kegiatan, $index);
         });
-        
+
         // Determine export type (default to xlsx)
         $type = $request->get('export_type', 'xlsx');
         $extension = $type === 'csv' ? 'csv' : 'xlsx';
-        
+
         // Export using FastExcel
         return (new FastExcel($data))->download($filename . '.' . $extension);
     }

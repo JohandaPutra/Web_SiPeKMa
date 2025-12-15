@@ -17,11 +17,11 @@ class AdminOrWadekMiddleware
             return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
 
-        $allowedRoles = ['admin', 'wadek_iii'];
+        $allowedRoles = ['super_admin', 'admin', 'wadek_iii'];
         $userRole = auth()->user()->role->name;
 
         if (!in_array($userRole, $allowedRoles)) {
-            abort(403, 'Akses ditolak. Hanya Administrator dan Wadek III yang diizinkan.');
+            abort(403, 'Akses ditolak. Hanya Super Administrator, Administrator dan Wadek III yang diizinkan.');
         }
 
         return $next($request);

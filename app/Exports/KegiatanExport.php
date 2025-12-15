@@ -18,7 +18,7 @@ class KegiatanExport
      */
     public function collection()
     {
-        $query = Kegiatan::with(['user', 'prodi']);
+        $query = Kegiatan::with(['user', 'prodi', 'jenisKegiatan', 'jenisPendanaan']);
 
         // Apply filters
         if (!empty($this->filters['search'])) {
@@ -46,21 +46,8 @@ class KegiatanExport
             'Nama Kegiatan' => $kegiatan->nama_kegiatan ?? '-',
             'Deskripsi' => $kegiatan->deskripsi_kegiatan ?? '-',
             'Prodi' => optional($kegiatan->prodi)->nama_prodi ?? '-',
-            'Jenis Kegiatan' => $kegiatan->jenis_kegiatan ? match($kegiatan->jenis_kegiatan) {
-                'seminar' => 'Seminar',
-                'workshop' => 'Workshop',
-                'pelatihan' => 'Pelatihan',
-                'lomba' => 'Lomba',
-                'lainnya' => 'Lainnya',
-                default => ucfirst($kegiatan->jenis_kegiatan),
-            } : '-',
-            'Jenis Pendanaan' => $kegiatan->jenis_pendanaan ? match($kegiatan->jenis_pendanaan) {
-                'mandiri' => 'Mandiri',
-                'sponsor' => 'Sponsor',
-                'hibah' => 'Hibah',
-                'internal' => 'Internal',
-                default => ucfirst($kegiatan->jenis_pendanaan),
-            } : '-',
+            'Jenis Kegiatan' => optional($kegiatan->jenisKegiatan)->nama ?? '-',
+            'Jenis Pendanaan' => optional($kegiatan->jenisPendanaan)->nama ?? '-',
             'Tempat' => $kegiatan->tempat_kegiatan ?? '-',
             'Tanggal Mulai' => $kegiatan->tanggal_mulai ? \Carbon\Carbon::parse($kegiatan->tanggal_mulai)->format('d/m/Y') : '-',
             'Tanggal Selesai' => $kegiatan->tanggal_akhir ? \Carbon\Carbon::parse($kegiatan->tanggal_akhir)->format('d/m/Y') : '-',

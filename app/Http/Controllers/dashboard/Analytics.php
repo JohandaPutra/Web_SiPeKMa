@@ -14,8 +14,8 @@ class Analytics extends Controller
     $user = Auth::user();
 
     // Hitung data berdasarkan role
-    if ($user->isSuperAdmin()) {
-      // Super Admin melihat SEMUA kegiatan dari SEMUA prodi (exclude rejected)
+    if ($user->isSuperAdmin() || $user->isRegularAdmin()) {
+      // Super Admin dan Admin melihat SEMUA kegiatan dari SEMUA prodi (exclude rejected)
       $totalUsulan = Kegiatan::where('tahap', 'usulan')
         ->where('status', '!=', 'ditolak')
         ->whereDoesntHave('approvalHistories', function($q) {
@@ -29,14 +29,13 @@ class Analytics extends Controller
         })
         ->count();
       $pendanaan = Kegiatan::where('tahap', 'pendanaan')
-        ->where('status', '!=', 'ditolak')
+        ->whereNotIn('status', ['ditolak', 'disetujui'])
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'ditolak');
         })
         ->count();
       $laporan = Kegiatan::where('tahap', 'laporan')
-        ->where('status', '!=', 'ditolak')
-        ->where('current_approver_role', '!=', 'completed')
+        ->whereNotIn('status', ['ditolak', 'disetujui'])
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'ditolak');
         })
@@ -59,15 +58,14 @@ class Analytics extends Controller
         ->count();
       $pendanaan = Kegiatan::where('user_id', $user->id)
         ->where('tahap', 'pendanaan')
-        ->where('status', '!=', 'ditolak')
+        ->whereNotIn('status', ['ditolak', 'disetujui'])
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'ditolak');
         })
         ->count();
       $laporan = Kegiatan::where('user_id', $user->id)
         ->where('tahap', 'laporan')
-        ->where('status', '!=', 'ditolak')
-        ->where('current_approver_role', '!=', 'completed')
+        ->whereNotIn('status', ['ditolak', 'disetujui'])
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'ditolak');
         })
@@ -90,15 +88,14 @@ class Analytics extends Controller
         ->count();
       $pendanaan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'pendanaan')
-        ->where('status', '!=', 'ditolak')
+        ->whereNotIn('status', ['ditolak', 'disetujui'])
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'ditolak');
         })
         ->count();
       $laporan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'laporan')
-        ->where('status', '!=', 'ditolak')
-        ->where('current_approver_role', '!=', 'completed')
+        ->whereNotIn('status', ['ditolak', 'disetujui'])
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'ditolak');
         })
@@ -126,7 +123,7 @@ class Analytics extends Controller
       $pendanaan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'pendanaan')
         ->whereIn('current_approver_role', ['kaprodi', 'wadek_iii'])
-        ->where('status', '!=', 'ditolak')
+        ->whereNotIn('status', ['ditolak', 'disetujui'])
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'ditolak');
         })
@@ -134,7 +131,7 @@ class Analytics extends Controller
       $laporan = Kegiatan::where('prodi_id', $user->prodi_id)
         ->where('tahap', 'laporan')
         ->whereIn('current_approver_role', ['kaprodi', 'wadek_iii'])
-        ->where('status', '!=', 'ditolak')
+        ->whereNotIn('status', ['ditolak', 'disetujui'])
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'ditolak');
         })
@@ -159,14 +156,14 @@ class Analytics extends Controller
         ->count();
       $pendanaan = Kegiatan::where('tahap', 'pendanaan')
         ->where('current_approver_role', 'wadek_iii')
-        ->where('status', '!=', 'ditolak')
+        ->whereNotIn('status', ['ditolak', 'disetujui'])
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'ditolak');
         })
         ->count();
       $laporan = Kegiatan::where('tahap', 'laporan')
         ->where('current_approver_role', 'wadek_iii')
-        ->where('status', '!=', 'ditolak')
+        ->whereNotIn('status', ['ditolak', 'disetujui'])
         ->whereDoesntHave('approvalHistories', function($q) {
           $q->where('action', 'ditolak');
         })

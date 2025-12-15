@@ -50,8 +50,14 @@ class MenuServiceProvider extends ServiceProvider
     foreach ($menuItems as $item) {
       // Check if item has role restriction
       if (isset($item->roles) && is_array($item->roles)) {
-        // If user role not in allowed roles, skip this item
-        if (!in_array($userRole, $item->roles)) {
+        // Super admin has access to all admin menus
+        $hasAccess = in_array($userRole, $item->roles);
+        if (!$hasAccess && $userRole === 'super_admin' && in_array('admin', $item->roles)) {
+          $hasAccess = true;
+        }
+        
+        // If user doesn't have access, skip this item
+        if (!$hasAccess) {
           continue;
         }
       }

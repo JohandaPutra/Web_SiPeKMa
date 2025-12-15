@@ -56,7 +56,7 @@
               <img src="{{ asset('assets/img/icons/Logo-UNJA.png') }}" alt="Logo UNJA" height="100" class="me-3">
               <div class="text-center">
                 <h1 class="m-0 text-primary fw-bold">SIPEKMA</h1>
-                <p class="m-0 text-muted">Sistem Informasi Pengelolaan Kegiatan Himpunan Mahasiswa</p>
+                <p class="m-0 text-muted">Sistem Informasi Pengelolaan Kegiatan Mahasiswa</p>
               </div>
             </div>
 

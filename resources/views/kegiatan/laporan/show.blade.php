@@ -412,16 +412,35 @@
         </div>
         @endif
 
-        <!-- Actions untuk Approver -->
-        @if(
-            !Auth::user()->isHima() &&
-            $kegiatan->current_approver_role === Auth::user()->role->name &&
-            $kegiatan->tahap === 'laporan' &&
-            $kegiatan->status === 'dikirim'
-        )
+        <!-- Actions untuk Approver (Pembina, Kaprodi, Wadek, Super Admin, Admin) -->
+        @php
+            $isSuperAdmin = Auth::user()->isSuperAdmin();
+            $isRegularAdmin = Auth::user()->isRegularAdmin();
+            $isSuperAdminOrAdmin = $isSuperAdmin || $isRegularAdmin;
+            
+            $canApprove = (
+                (!Auth::user()->isHima() && $kegiatan->current_approver_role === Auth::user()->role->name) ||
+                $isSuperAdminOrAdmin
+            ) && $kegiatan->tahap === 'laporan' && $kegiatan->status === 'dikirim';
+        @endphp
+        
+        @if($canApprove)
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">Tindakan Review</h5>
+                @if($isSuperAdmin)
+                    <small class="text-muted">Anda bertindak sebagai <strong>Wadek III</strong> (Approval Langsung)</small>
+                @elseif($isRegularAdmin)
+                    @php
+                        $currentApproverDisplay = match($kegiatan->current_approver_role) {
+                            'pembina_hima' => 'Pembina Hima',
+                            'kaprodi' => 'Kaprodi',
+                            'wadek_iii' => 'Wadek III',
+                            default => 'Approver',
+                        };
+                    @endphp
+                    <small class="text-muted">Anda bertindak sebagai <strong>{{ $currentApproverDisplay }}</strong></small>
+                @endif
             </div>
             <div class="card-body">
                 <button type="button" class="btn btn-success w-100 mb-2" data-bs-toggle="modal" data-bs-target="#approveModal">
@@ -446,7 +465,7 @@
         <!-- Tombol Kembali untuk role lain yang hanya view -->
         @if(
             (Auth::user()->isHima() && $kegiatan->user_id !== Auth::user()->id) ||
-            (!Auth::user()->isHima() && $kegiatan->current_approver_role !== Auth::user()->role->name)
+            (!Auth::user()->isHima() && !$isSuperAdminOrAdmin && $kegiatan->current_approver_role !== Auth::user()->role->name)
         )
         <div class="card">
             <div class="card-body">
