@@ -25,15 +25,15 @@
   </div>
   @endif
 
-  <div class="table-responsive text-nowrap">
+  <div class="table-responsive">
     <table class="table">
       <thead>
         <tr>
-          <th width="5%">No</th>
-          <th>Kode</th>
-          <th>Nama Program Studi</th>
-          <th width="10%">Jumlah User</th>
-          <th width="15%">Aksi</th>
+          <th width="6%">No</th>
+          <th width="13%">Kode</th>
+          <th width="51%">Nama Program Studi</th>
+          <th width="15%" class="text-center">Jumlah User</th>
+          <th width="15%" class="text-center">Aksi</th>
         </tr>
       </thead>
       <tbody class="table-border-bottom-0">
@@ -41,11 +41,14 @@
         <tr>
           <td>{{ $prodis->firstItem() + $index }}</td>
           <td><strong>{{ $prodi->kode_prodi }}</strong></td>
-          <td>{{ $prodi->nama_prodi }}</td>
+          <td>
+            <span class="d-none d-md-inline">{{ $prodi->nama_prodi }}</span>
+            <span class="d-inline d-md-none">{{ Str::limit($prodi->nama_prodi, 25) }}</span>
+          </td>
           <td class="text-center">
             <span class="badge bg-label-primary">{{ $prodi->users_count }}</span>
           </td>
-          <td>
+          <td class="text-center">
             <div class="dropdown">
               <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                 <i class="bx bx-dots-vertical-rounded"></i>

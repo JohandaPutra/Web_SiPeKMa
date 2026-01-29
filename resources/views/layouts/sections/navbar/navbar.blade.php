@@ -49,7 +49,7 @@
     <ul class="navbar-nav flex-row align-items-center ms-auto">
 
         <!-- Place this tag where you want the button to render. -->
-        <li class="nav-item lh-1 me-4">
+        <li class="nav-item lh-1 me-4 d-none d-sm-block">
             <div class="d-flex align-items-center">
                 <div class="text-end me-3">
                     <div class="fw-semibold text-heading">

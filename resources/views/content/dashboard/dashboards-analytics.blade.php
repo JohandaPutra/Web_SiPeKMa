@@ -107,112 +107,103 @@
 
     <div class="row g-4 mb-6">
         <!-- Card 1 - Usulan Kegiatan -->
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-3 col-md-6 col-6">
             <div class="card h-100 border-0 shadow-hover position-relative overflow-hidden"
                 style="transition: all 0.4s ease;">
                 <!-- Background Pattern -->
-                <div style="position: absolute; top: -20px; right: -20px; opacity: 0.15;">
+                <div class="d-none d-md-block" style="position: absolute; top: -20px; right: -20px; opacity: 0.15;">
                     <i class="bx bx-bulb" style="font-size: 6rem; color: rgba(255,255,255,0.5);"></i>
                 </div>
 
-                <div class="card-body text-center p-4 position-relative"
+                <div class="card-body text-center p-3 p-md-4 position-relative"
                     style="background: linear-gradient(135deg, #f3541d 0%, #ff7849 100%);">
-                    <div class="mb-3">
+                    <div class="mb-2 mb-md-3">
                         <div class="bg-white bg-opacity-25 rounded-circle mx-auto d-flex align-items-center justify-content-center shadow-sm"
-                            style="width: 80px; height: 80px;">
+                            style="width: 50px; height: 50px;">
                             <i class="bx bx-bulb text-primary"
-                                style="font-size: 2.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);"></i>
+                                style="font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);"></i>
                         </div>
                     </div>
-                    <h5 class="fw-bold text-white mb-2">Usulan Kegiatan</h5>
-                    <p class="text-white opacity-85 small mb-3">Sampaikan ide kreatif untuk kegiatan baru</p>
-                    <div class="text-white opacity-75 small">
-                        <i class="bx bx-time-five me-1"></i>5 menit setup
-                    </div>
+                    <h6 class="fw-bold text-white mb-2 fs-6 fs-md-5">Usulan Kegiatan</h6>
+                    <p class="text-white opacity-85 small mb-2 mb-md-3 d-none d-md-block">Sampaikan ide kreatif untuk kegiatan baru</p>
                     <a href="{{ route('kegiatan.index') }}" class="stretched-link"></a>
                 </div>
             </div>
         </div>
 
         <!-- Card 2 - Proposal Kegiatan -->
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-3 col-md-6 col-6">
             <div class="card h-100 border-0 shadow-hover position-relative overflow-hidden"
                 style="transition: all 0.4s ease;">
                 <!-- Background Pattern -->
-                <div style="position: absolute; top: -20px; right: -20px; opacity: 0.15;">
+                <div class="d-none d-md-block" style="position: absolute; top: -20px; right: -20px; opacity: 0.15;">
                     <i class="bx bx-file-blank" style="font-size: 6rem; color: rgba(255,255,255,0.5);"></i>
                 </div>
 
-                <div class="card-body text-center p-4 position-relative"
+                <div class="card-body text-center p-3 p-md-4 position-relative"
                     style="background: linear-gradient(135deg, #f3541d 0%, #ff7849 100%);">
-                    <div class="mb-3">
+                    <div class="mb-2 mb-md-3">
                         <div class="bg-white bg-opacity-25 rounded-circle mx-auto d-flex align-items-center justify-content-center shadow-sm"
-                            style="width: 80px; height: 80px;">
+                            style="width: 50px; height: 50px;">
                             <i class="bx bx-file-blank text-primary"
-                                style="font-size: 2.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);"></i>
+                                style="font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);"></i>
                         </div>
                     </div>
-                    <h5 class="fw-bold text-white mb-2">Proposal Kegiatan</h5>
-                    <p class="text-white opacity-85 small mb-3">Buat proposal detail dan profesional</p>
-                    <div class="text-white opacity-75 small">
-                        <i class="bx bx-check-circle me-1"></i>Template tersedia
-                    </div>
+                    <h6 class="fw-bold text-white mb-2 fs-6 fs-md-5">Proposal Kegiatan</h6>
+                    <p class="text-white opacity-85 small mb-2 mb-md-3 d-none d-md-block">Buat proposal detail dan profesional</p>
+                   
                     <a href="{{ route('kegiatan.proposal.index') }}" class="stretched-link"></a>
                 </div>
             </div>
         </div>
 
         <!-- Card 3 - Pendanaan Kegiatan -->
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-3 col-md-6 col-6">
             <div class="card h-100 border-0 shadow-hover position-relative overflow-hidden"
                 style="transition: all 0.4s ease;">
                 <!-- Background Pattern -->
-                <div style="position: absolute; top: -20px; right: -20px; opacity: 0.15;">
+                <div class="d-none d-md-block" style="position: absolute; top: -20px; right: -20px; opacity: 0.15;">
                     <i class="bx bx-money" style="font-size: 6rem; color: rgba(255,255,255,0.5);"></i>
                 </div>
 
-                <div class="card-body text-center p-4 position-relative"
+                <div class="card-body text-center p-3 p-md-4 position-relative"
                     style="background: linear-gradient(135deg, #f3541d 0%, #ff7849 100%);">
-                    <div class="mb-3">
+                    <div class="mb-2 mb-md-3">
                         <div class="bg-white bg-opacity-25 rounded-circle mx-auto d-flex align-items-center justify-content-center shadow-sm"
-                            style="width: 80px; height: 80px;">
+                            style="width: 50px; height: 50px;">
                             <i class="bx bx-money text-primary"
-                                style="font-size: 2.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);"></i>
+                                style="font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);"></i>
                         </div>
                     </div>
-                    <h5 class="fw-bold text-white mb-2">Pendanaan Kegiatan</h5>
-                    <p class="text-white opacity-85 small mb-3">Kelola anggaran dan dana kegiatan</p>
-                    <div class="text-white opacity-75 small">
-                        <i class="bx bx-calculator me-1"></i>Auto calculate
-                    </div>
+                    <h6 class="fw-bold text-white mb-2 fs-6 fs-md-5">Pendanaan Kegiatan</h6>
+                    <p class="text-white opacity-85 small mb-2 mb-md-3 d-none d-md-block">Kelola anggaran dan dana kegiatan</p>
+                    
                     <a href="{{ route('kegiatan.pendanaan.index') }}" class="stretched-link"></a>
                 </div>
             </div>
         </div>
 
         <!-- Card 4 - Laporan Kegiatan -->
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-3 col-md-6 col-6">
             <div class="card h-100 border-0 shadow-hover position-relative overflow-hidden"
                 style="transition: all 0.4s ease;">
                 <!-- Background Pattern -->
-                <div style="position: absolute; top: -20px; right: -20px; opacity: 0.15;">
+                <div class="d-none d-md-block" style="position: absolute; top: -20px; right: -20px; opacity: 0.15;">
                     <i class="bx bx-bar-chart-alt-2" style="font-size: 6rem; color: rgba(255,255,255,0.5);"></i>
                 </div>
 
-                <div class="card-body text-center p-4 position-relative"
+                <div class="card-body text-center p-3 p-md-4 position-relative"
                     style="background: linear-gradient(135deg, #f3541d 0%, #ff7849 100%);">
-                    <div class="mb-3">
+                    <div class="mb-2 mb-md-3">
                         <div class="bg-white bg-opacity-25 rounded-circle mx-auto d-flex align-items-center justify-content-center shadow-sm"
-                            style="width: 80px; height: 80px;">
+                            style="width: 50px; height: 50px;">
                             <i class="bx bx-bar-chart-alt-2 text-primary"
-                                style="font-size: 2.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);"></i>
+                                style="font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);"></i>
                         </div>
                     </div>
-                    <h5 class="fw-bold text-white mb-2">Laporan Kegiatan</h5>
-                    <p class="text-white opacity-85 small mb-3">Generate laporan comprehensive</p>
-                    <div class="text-white opacity-75 small">
-                        <i class="bx bx-download me-1"></i>Export PDF/Excel
-                    </div>
+                    <h6 class="fw-bold text-white mb-2 fs-6 fs-md-5">Laporan Kegiatan</h6>
+                    <p class="text-white opacity-85 small mb-2 mb-md-3 d-none d-md-block">Generate laporan comprehensive</p>
+                  
                     <a href="{{ route('kegiatan.laporan.index') }}" class="stretched-link"></a>
                 </div>
             </div>

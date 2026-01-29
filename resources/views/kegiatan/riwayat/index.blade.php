@@ -10,7 +10,7 @@
         </h4>
         <p class="text-muted mb-0">Lihat semua riwayat kegiatan dengan detail lengkap</p>
     </div>
-    <nav aria-label="breadcrumb">
+    <nav aria-label="breadcrumb" class="d-none d-md-block">
         <ol class="breadcrumb breadcrumb-style1 mb-0">
             <li class="breadcrumb-item">
                 <a href="{{ route('dashboard-analytics') }}" class="text-muted">Dashboard</a>
@@ -47,7 +47,7 @@
                 </div>
 
                 <!-- Tahapan -->
-                <div class="col-md-3 col-lg-3">
+                <div class="col-md-2 col-lg-2">
                     <label class="form-label fw-semibold text-muted small mb-2">Tahapan</label>
                     <select name="tahap" class="form-select">
                         <option value="">Semua Tahapan</option>
@@ -59,12 +59,12 @@
                 </div>
 
                 <!-- Buttons -->
-                <div class="col-md-2 col-lg-2">
+                <div class="col-md-3 col-lg-3">
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary flex-fill">
                             <i class="bx bx-filter-alt me-1"></i> Filter
                         </button>
-                        <a href="{{ route('kegiatan.riwayat') }}" class="btn btn-outline-secondary">
+                        <a href="{{ route('kegiatan.riwayat') }}" class="btn btn-outline-secondary flex-fill">
                             <i class="bx bx-reset me-1"></i> Reset
                         </a>
                     </div>

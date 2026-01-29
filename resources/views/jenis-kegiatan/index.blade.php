@@ -41,7 +41,10 @@
         <tr>
           <td>{{ $jenisKegiatans->firstItem() + $index }}</td>
           <td><strong>{{ $jenis->nama }}</strong></td>
-          <td>{{ $jenis->deskripsi ?? '-' }}</td>
+          <td>
+            <span class="d-none d-md-inline">{{ $jenis->deskripsi ?? '-' }}</span>
+            <span class="d-inline d-md-none">{{ Str::limit($jenis->deskripsi ?? '-', 30) }}</span>
+          </td>
           <td>
             @if($jenis->is_active)
               <span class="badge bg-success">Aktif</span>

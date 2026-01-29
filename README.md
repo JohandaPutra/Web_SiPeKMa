@@ -24,8 +24,8 @@ Laravel 11 application with Sneat Bootstrap admin template for activity proposal
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/harryantomy/Sipekma-New.git
-cd Sipekma-New
+git clone https://github.com/JohandaPutra/Web_SiPeKMa.git
+cd Web_SiPeKMa
 ```
 
 2. Install dependencies:

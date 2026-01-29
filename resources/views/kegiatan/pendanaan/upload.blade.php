@@ -10,7 +10,7 @@
         </h4>
         <p class="text-muted mb-0">Upload Rencana Anggaran Biaya untuk kegiatan yang proposalnya telah disetujui</p>
     </div>
-    <nav aria-label="breadcrumb">
+    <nav aria-label="breadcrumb" class="d-none d-md-block">
         <ol class="breadcrumb breadcrumb-style1 mb-0">
             <li class="breadcrumb-item">
                 <a href="{{ route('dashboard-analytics') }}" class="text-muted">Dashboard</a>

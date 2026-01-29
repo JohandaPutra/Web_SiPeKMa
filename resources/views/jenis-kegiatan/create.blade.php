@@ -3,7 +3,7 @@
 @section('title', 'Tambah Jenis Kegiatan')
 
 @section('content')
-<nav aria-label="breadcrumb">
+<nav aria-label="breadcrumb" class="d-none d-md-block">
   <ol class="breadcrumb breadcrumb-style1 mb-0">
     <li class="breadcrumb-item">
       <a href="{{ route('dashboard') }}">Dashboard</a>

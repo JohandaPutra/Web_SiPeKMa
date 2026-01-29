@@ -25,15 +25,15 @@
   </div>
   @endif
 
-  <div class="table-responsive text-nowrap">
+  <div class="table-responsive">
     <table class="table">
       <thead>
         <tr>
-          <th width="5%">No</th>
-          <th>Nama Jenis Pendanaan</th>
-          <th>Deskripsi</th>
-          <th width="10%">Status</th>
-          <th width="15%">Aksi</th>
+          <th width="6%">No</th>
+          <th width="27%">Nama Jenis Pendanaan</th>
+          <th width="42%">Deskripsi</th>
+          <th width="10%" class="text-center">Status</th>
+          <th width="15%" class="text-center">Aksi</th>
         </tr>
       </thead>
       <tbody class="table-border-bottom-0">
@@ -41,15 +41,18 @@
         <tr>
           <td>{{ $jenisPendanaans->firstItem() + $index }}</td>
           <td><strong>{{ $jenis->nama }}</strong></td>
-          <td>{{ $jenis->deskripsi ?? '-' }}</td>
           <td>
+            <span class="d-none d-lg-inline">{{ Str::limit($jenis->deskripsi ?? '-', 100) }}</span>
+            <span class="d-inline d-lg-none">{{ Str::limit($jenis->deskripsi ?? '-', 50) }}</span>
+          </td>
+          <td class="text-center">
             @if($jenis->is_active)
               <span class="badge bg-success">Aktif</span>
             @else
               <span class="badge bg-secondary">Nonaktif</span>
             @endif
           </td>
-          <td>
+          <td class="text-center">
             <div class="dropdown">
               <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                 <i class="bx bx-dots-vertical-rounded"></i>

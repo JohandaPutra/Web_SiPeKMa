@@ -11,7 +11,7 @@
             </h4>
             <p class="text-muted mb-0">Manage and organize your users efficiently</p>
         </div>
-        <nav aria-label="breadcrumb">
+        <nav aria-label="breadcrumb" class="d-none d-md-block">
             <ol class="breadcrumb breadcrumb-style1 mb-0">
                 <li class="breadcrumb-item">
                     <a href="{{ route('dashboard-analytics') }}" class="text-muted">Dashboard</a>
@@ -45,21 +45,18 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center row mb-3">
-                <div class="col-sm-12 col-md-6">
-                    <div class="dt-length"></div>
-                </div>
-                <div class="col-sm-12 col-md-6">
-                    <div class="dt-search"></div>
-                </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="dt-search"></div>
+                <div class="dt-length"></div>
             </div>
-            <table id="users-table" class="table table-hover dt-responsive nowrap">
+            <div class="table-responsive">
+                <table id="users-table" class="table table-hover nowrap" style="width:100%; white-space: nowrap;">
                 <thead>
                     <tr>
                         <th>#</th>
                         <th>Nama</th>
-                        <th>Username</th>
-                        <th>Email</th>
+                        <th class="d-none d-md-table-cell">Username</th>
+                        <th class="d-none d-md-table-cell">Email</th>
                         <th>Role</th>
                         <th>Prodi</th>
                         <th class="text-center">Actions</th>
@@ -70,8 +67,8 @@
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $user->name }}</td>
-                            <td>{{ $user->username }}</td>
-                            <td>{{ $user->email }}</td>
+                            <td class="d-none d-md-table-cell">{{ $user->username }}</td>
+                            <td class="d-none d-md-table-cell">{{ $user->email }}</td>
                             <td>
                                 <span class="badge bg-label-primary">{{ $user->role->name ?? '-' }}</span>
                             </td>
@@ -102,6 +99,7 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
     <!--/ DataTable with Buttons -->
@@ -111,21 +109,35 @@
     <script>
         $(document).ready(function() {
             var table = $('#users-table').DataTable({
-                responsive: true,
+                scrollX: true,
                 pageLength: 10,
                 language: {
                     paginate: {
                         previous: '<i class="bx bx-chevron-left"></i>',
                         next: '<i class="bx bx-chevron-right"></i>'
                     }
-                }
+                },
+                order: [[1, 'asc']],
+                dom: '<"d-flex justify-content-between align-items-center mb-3"<"dt-search"f><"dt-length"l>>rtip',
+                autoWidth: false
             });
 
-
-
             // Kostum style untuk select
-            $('.dataTables_wrapper .dataTables_filter input').addClass('form-control form-control-sm ms-2');
+            $('.dataTables_wrapper .dataTables_filter input').addClass('form-control form-control-sm').css('width', '160px');
             $('.dataTables_wrapper .dataTables_length select').addClass('form-select form-select-sm');
+            
+            // Custom label untuk show entries
+            $('.dataTables_length label').contents().filter(function() {
+                return this.nodeType === 3;
+            }).remove();
+            $('.dataTables_length label').prepend('Show ');
+            $('.dataTables_length label').append(' entries');
+            
+            // Custom label untuk search
+            $('.dataTables_filter label').contents().filter(function() {
+                return this.nodeType === 3;
+            }).remove();
+            $('.dataTables_filter input').attr('placeholder', 'Search...');
         });
     </script>
 @endpush
