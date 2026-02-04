@@ -37,11 +37,11 @@
                     <div class="flex-shrink-0">
                         @if($kegiatan->status === 'revisi')
                         <span class="badge bg-warning p-3">
-                            <i class="bx bx-error" style="font-size: 1.5rem;"></i>
+                            <i class="bx bx-error icon-badge-lg"></i>
                         </span>
                         @else
                         <span class="badge bg-success p-3">
-                            <i class="bx bx-check-circle" style="font-size: 1.5rem;"></i>
+                            <i class="bx bx-check-circle icon-badge-lg"></i>
                         </span>
                         @endif
                     </div>
@@ -57,23 +57,26 @@
                     </div>
                 </div>
 
-                @if($kegiatan->status === 'revisi')
-                @php
-                    $lastRevisiHistory = $kegiatan->approvalHistories
-                        ->where('tahap', 'proposal')
-                        ->where('action', 'revisi')
-                        ->sortByDesc('approved_at')
-                        ->first();
-                @endphp
-                @if($lastRevisiHistory && $lastRevisiHistory->comment)
+                @if($kegiatan->status === 'revisi' && $lastRevision)
                 <div class="alert alert-warning mb-3">
-                    <strong><i class="bx bx-error-circle me-1"></i> Catatan Revisi:</strong>
-                    <p class="mb-0 mt-2">{{ $lastRevisiHistory->comment }}</p>
-                    <small class="text-muted">
-                        - {{ $lastRevisiHistory->approver->role->display_name }} ({{ $lastRevisiHistory->approved_at->format('d M Y H:i') }})
-                    </small>
+                    <h6 class="alert-heading">
+                        <i class="bx bx-error-circle me-1"></i> Revisi Diperlukan
+                    </h6>
+                    <div class="mb-2">
+                        <strong>Dari:</strong> {{ $lastRevision->approver->name }}
+                        ({{ match($lastRevision->approver->role->name) {
+                            'pembina_hima' => 'Pembina Hima',
+                            'kaprodi' => 'Kaprodi',
+                            'wadek_iii' => 'Wadek III',
+                            default => $lastRevision->approver->role->name
+                        } }})
+                    </div>
+                    <div class="mb-0">
+                        <strong>Catatan:</strong><br>
+                        {{ $lastRevision->comment }}
+                    </div>
+                    <small class="text-muted">{{ $lastRevision->approved_at->diffForHumans() }}</small>
                 </div>
-                @endif
                 @endif
 
                 <div class="alert alert-info mb-0">
@@ -113,10 +116,10 @@
                     </div>
 
                     <!-- File Preview Area -->
-                    <div id="file-preview" class="mb-4" style="display: none;">
+                    <div id="file-preview" class="mb-4 d-none">
                         <div class="alert alert-secondary">
                             <div class="d-flex align-items-center">
-                                <i class="bx bx-file-blank me-2" style="font-size: 2rem;"></i>
+                                <i class="bx bx-file-blank me-2 icon-file-lg"></i>
                                 <div class="flex-grow-1">
                                     <strong id="file-name">-</strong>
                                     <div class="text-muted small" id="file-size">-</div>

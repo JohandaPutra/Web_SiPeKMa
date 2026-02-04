@@ -1,0 +1,73 @@
+/**
+ * SIPEKMA Custom Variables
+ * ========================
+ * File ini berisi variable khusus untuk SIPEKMA
+ * Tidak mengubah variables Sneat yang sudah ada
+ * 
+ * Untuk Presentasi Skripsi:
+ * - Mudah dijelaskan: "Ini custom variables untuk branding SIPEKMA"
+ * - Separasi jelas: tidak tercampur dengan Sneat template
+ */
+
+// ========================================
+// SIPEKMA BRAND COLORS
+// ========================================
+// Warna primary SIPEKMA (sudah sesuai dengan branding)
+$sipekma-primary: #f3541d;
+$sipekma-primary-light: #ff7849;
+$sipekma-primary-dark: #d84315;
+
+// Gradient combinations untuk hero sections
+$sipekma-gradient-primary: linear-gradient(135deg, $sipekma-primary 0%, $sipekma-primary-light 100%);
+$sipekma-gradient-hero: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 25%, #fef3c7 50%, #fed7aa 75%, #fce7f3 100%);
+$sipekma-gradient-card: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+
+// ========================================
+// ICON SIZES
+// ========================================
+// Standarisasi ukuran icon untuk consistency
+$icon-size-sm: 1.25rem;    // Small icons (20px)
+$icon-size-md: 1.5rem;     // Medium icons (24px) - default
+$icon-size-lg: 2rem;       // Large icons (32px)
+$icon-size-xl: 4rem;       // Extra large (64px)
+$icon-size-xxl: 6rem;      // Extra extra large (96px)
+$icon-size-hero: 8rem;     // Hero section icons (128px)
+
+// ========================================
+// SPACING & SIZING
+// ========================================
+// Icon wrapper sizes
+$icon-wrapper-sm: 40px;
+$icon-wrapper-md: 50px;
+$icon-wrapper-lg: 60px;
+
+// Card spacing
+$card-padding-mobile: 1rem;
+$card-padding-desktop: 1.5rem;
+
+// ========================================
+// EFFECTS & TRANSITIONS
+// ========================================
+// Hover effects
+$transition-smooth: all 0.4s ease;
+$transition-fast: all 0.2s ease;
+
+// Shadow depths
+$shadow-floating: 0 10px 30px rgba(59, 130, 246, 0.3);
+$shadow-hover: 0 25px 50px rgba(0, 0, 0, 0.15);
+$shadow-text: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+// Opacity levels
+$opacity-decoration: 0.15;
+$opacity-overlay: 0.5;
+
+// ========================================
+// NOTES UNTUK PRESENTASI
+// ========================================
+// Saat ditanya penguji:
+// 1. "Kenapa pisah file?" 
+//    → Untuk maintainability dan tidak mengganggu Sneat original
+// 2. "Apa bedanya dengan variables.php?"
+//    → variables.php untuk config PHP, ini untuk styling CSS/SCSS
+// 3. "Kenapa pakai SCSS variable?"
+//    → Untuk consistency, easy to change, dan DRY principle

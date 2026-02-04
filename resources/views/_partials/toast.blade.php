@@ -1,5 +1,5 @@
 <!-- Toast Container -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+<div class="toast-container position-fixed bottom-0 end-0 p-3 z-index-toast">
     @if (session('success'))
         <div class="bs-toast toast fade bg-success" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="toast-header">

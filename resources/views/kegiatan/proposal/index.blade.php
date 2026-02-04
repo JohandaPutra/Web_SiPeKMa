@@ -30,7 +30,7 @@
         </h5>
         <form method="GET" action="{{ route('kegiatan.proposal.index') }}" class="d-flex align-items-center gap-2">
             <label class="form-label mb-0 text-nowrap">Tampilkan:</label>
-            <select name="per_page" class="form-select form-select-sm" style="width: 100px;" onchange="this.form.submit()">
+            <select name="per_page" class="form-select form-select-sm w-100px" onchange="this.form.submit()">
                 <option value="5" {{ request('per_page', 10) == 5 ? 'selected' : '' }}>5</option>
                 <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
                 <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
@@ -62,9 +62,11 @@
                     @foreach($kegiatans as $index => $kegiatan)
                     <tr>
                         <td>{{ $index + 1 }}</td>
-                        <td>
-                            <strong>{{ $kegiatan->nama_kegiatan }}</strong>
-                            <br><small class="text-muted">{{ Str::limit($kegiatan->deskripsi_kegiatan, 50) }}</small>
+                        <td class="td-kegiatan-name">
+                            <div>
+                                <strong class="d-block">{{ $kegiatan->nama_kegiatan }}</strong>
+                                <small class="text-muted">{{ Str::limit($kegiatan->deskripsi_kegiatan, 50) }}</small>
+                            </div>
                         </td>
                         <td><span class="badge bg-label-info">{{ $kegiatan->jenisKegiatan->nama ?? '-' }}</span></td>
                         <td>

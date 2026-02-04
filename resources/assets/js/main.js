@@ -97,11 +97,51 @@ let menu, animate;
   // Auto update layout based on screen size
   window.Helpers.setAutoUpdate(true);
 
+  // Auto-close sidebar on mobile when clicking menu links
+  const menuLinks = document.querySelectorAll('#layout-menu .menu-link:not(.menu-toggle):not(#sidebar-close-btn)');
+  menuLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      // Close sidebar after a short delay to allow navigation
+      setTimeout(() => {
+        if (window.Helpers.isSmallScreen()) {
+          const layoutWrapper = document.querySelector('.layout-wrapper');
+          if (layoutWrapper && layoutWrapper.classList.contains('layout-menu-expanded')) {
+            layoutWrapper.classList.remove('layout-menu-expanded');
+          }
+        }
+      }, 100);
+    });
+  });
+
   // Toggle Password Visibility
   window.Helpers.initPasswordToggle();
 
   // Speech To Text
   window.Helpers.initSpeechToText();
+
+  // Enable smooth horizontal scrolling for tables on mobile
+  const tableResponsive = document.querySelectorAll('.table-responsive');
+  tableResponsive.forEach(container => {
+    // Force touch-action and overflow properties
+    container.style.webkitOverflowScrolling = 'touch';
+    container.style.touchAction = 'pan-x pan-y';
+    container.style.overflowX = 'auto';
+    
+    // Add scroll event listener
+    container.addEventListener('scroll', function() {
+      if (this.scrollLeft > 0) {
+        this.classList.add('scrolled');
+      } else {
+        this.classList.remove('scrolled');
+      }
+    }, { passive: true });
+    
+    // Force enable touch scroll on table element too
+    const table = container.querySelector('table');
+    if (table) {
+      table.style.touchAction = 'pan-x pan-y';
+    }
+  });
 
   // Manage menu expanded/collapsed with templateCustomizer & local storage
   //------------------------------------------------------------------
@@ -114,5 +154,10 @@ let menu, animate;
   // If current layout is vertical and current window screen is > small
 
   // Auto update menu collapsed/expanded based on the themeConfig
-  window.Helpers.setCollapsed(true, false);
+  // Ensure sidebar is collapsed on mobile (delay to ensure DOM is ready)
+  setTimeout(() => {
+    if (window.Helpers.isSmallScreen()) {
+      window.Helpers.setCollapsed(true, false);
+    }
+  }, 100);
 })();

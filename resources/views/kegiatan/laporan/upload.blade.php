@@ -51,35 +51,26 @@
                     </div>
                 </div>
 
-                @if($kegiatan->status === 'revisi')
-                @php
-                    $lastRevisi = $kegiatan->approvalHistories
-                        ->where('tahap', 'laporan')
-                        ->where('action', 'revisi')
-                        ->sortByDesc('approved_at')
-                        ->first();
-                @endphp
-                @if($lastRevisi)
+                @if($kegiatan->status === 'revisi' && $lastRevision)
                 <div class="alert alert-warning">
                     <h6 class="alert-heading">
                         <i class="bx bx-error-circle me-1"></i> Revisi Diperlukan
                     </h6>
                     <div class="mb-2">
-                        <strong>Dari:</strong> {{ $lastRevisi->approver->name }}
-                        ({{ match($lastRevisi->approver->role->name) {
+                        <strong>Dari:</strong> {{ $lastRevision->approver->name }}
+                        ({{ match($lastRevision->approver->role->name) {
                             'pembina_hima' => 'Pembina Hima',
                             'kaprodi' => 'Kaprodi',
                             'wadek_iii' => 'Wadek III',
-                            default => $lastRevisi->approver->role->name
+                            default => $lastRevision->approver->role->name
                         } }})
                     </div>
                     <div class="mb-0">
                         <strong>Catatan:</strong><br>
-                        {{ $lastRevisi->comment }}
+                        {{ $lastRevision->comment }}
                     </div>
-                    <small class="text-muted">{{ $lastRevisi->approved_at->diffForHumans() }}</small>
+                    <small class="text-muted">{{ $lastRevision->approved_at->diffForHumans() }}</small>
                 </div>
-                @endif
                 @endif
 
                 @php

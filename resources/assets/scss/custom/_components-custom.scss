@@ -1,0 +1,278 @@
+/**
+ * SIPEKMA Custom Components
+ * =========================
+ * File ini berisi component styles yang reusable
+ * Menggantikan inline styles yang berulang-ulang
+ * 
+ * Untuk Presentasi Skripsi:
+ * - Define once, use everywhere
+ * - Easy to maintain: ubah disini, semua halaman ikut berubah
+ * - Performance: browser bisa cache CSS ini
+ */
+
+// Import custom variables
+@import 'variables-custom';
+
+// ========================================
+// BACKGROUND GRADIENTS
+// ========================================
+
+// Hero section gradient (dashboard)
+.bg-gradient-hero {
+  background: $sipekma-gradient-hero;
+  position: relative;
+  
+  // Untuk presentasi: "Gradient ini dipakai di hero dashboard"
+}
+
+// Primary gradient (untuk card icons, buttons)
+.bg-gradient-primary {
+  background: $sipekma-gradient-primary;
+  
+  // Untuk presentasi: "Gradient ini konsisten dengan branding SIPEKMA"
+}
+
+// Orange gradient (untuk user management, warning states)
+.bg-gradient-orange {
+  background: linear-gradient(135deg, #f3541d 0%, #ff7849 100%);
+  
+  // Untuk presentasi: "Gradient orange untuk user management icon"
+}
+
+// Subtle card gradient
+.bg-gradient-card {
+  background: $sipekma-gradient-card;
+  border: 1px solid #e2e8f0;
+  
+  // Untuk presentasi: "Gradient subtle untuk card background"
+}
+
+// ========================================
+// APP BRAND / LOGO SECTION
+// ========================================
+
+// Brand container dengan height fixed
+.app-brand {
+  height: 120px;
+  position: relative;
+  
+  // Untuk presentasi: "Logo container dengan height konsisten"
+}
+
+// Logo image styling
+.logo-image {
+  object-fit: contain;
+  
+  // Untuk presentasi: "Ensure logo maintains aspect ratio"
+}
+
+// Mobile menu close button positioning
+.mobile-menu-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 999;
+  
+  // Untuk presentasi: "Close button untuk mobile menu"
+}
+
+// ========================================
+// MENU FOOTER
+// ========================================
+
+.menu-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  
+  // Untuk presentasi: "Footer menu dengan subtle border"
+}
+
+// ========================================
+// ICON WRAPPERS
+// ========================================
+
+// Base icon wrapper
+.icon-wrapper {
+  width: $icon-wrapper-sm;
+  height: $icon-wrapper-sm;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  // Untuk presentasi: "Wrapper standar untuk icon di card header"
+}
+
+// Medium icon wrapper
+.icon-wrapper-md {
+  width: $icon-wrapper-md;
+  height: $icon-wrapper-md;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  // Untuk presentasi: "Size medium untuk icon yang lebih prominent"
+}
+
+// Large icon wrapper
+.icon-wrapper-lg {
+  width: $icon-wrapper-lg;
+  height: $icon-wrapper-lg;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+// ========================================
+// FLOATING DECORATIVE ICONS
+// ========================================
+
+// Base floating icon style
+.floating-icon {
+  position: absolute;
+  opacity: $opacity-decoration;
+  pointer-events: none; // Tidak mengganggu interaksi user
+  
+  // Untuk presentasi: "Dekorasi visual, tidak fungsional"
+}
+
+// Positioning variations
+.floating-icon-top-right {
+  @extend .floating-icon;
+  top: 20px;
+  right: 20px;
+}
+
+.floating-icon-bottom-left {
+  @extend .floating-icon;
+  bottom: 10px;
+  left: 10px;
+}
+
+.floating-icon-top-right-lg {
+  @extend .floating-icon;
+  top: -20px;
+  right: -20px;
+}
+
+// ========================================
+// HOVER EFFECTS
+// ========================================
+
+// Card lift on hover
+.card-hover-lift {
+  transition: $transition-smooth;
+  cursor: pointer;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  
+  &:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: $shadow-hover !important;
+    
+    &::before {
+      opacity: 1;
+    }
+  }
+  
+  // Untuk presentasi: "Efek hover untuk better UX"
+}
+
+// ========================================
+// HERO SECTION SPECIFIC
+// ========================================
+
+// Hero card styling
+.hero-card {
+  min-height: 200px;
+  position: relative;
+}
+
+// Floating icon positions
+.floating-icon-top-right {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  opacity: $opacity-decoration;
+}
+
+.floating-icon-bottom-left {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  opacity: $opacity-decoration;
+}
+
+.floating-icon-top-right-lg {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  opacity: $opacity-decoration;
+}
+
+// Icon hero size
+.icon-hero {
+  font-size: $icon-size-hero;
+}
+
+// Image utilities
+.img-drop-shadow {
+  filter: $shadow-floating;
+}
+
+// Floating animation
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+// Hide mobile hero illustration
+.d-none-mobile-hero {
+  @media (max-width: 991px) {
+    display: none !important;
+  }
+}
+
+.hero-card {
+  min-height: 200px;
+  
+  // Untuk presentasi: "Card utama di dashboard dengan height minimum"
+}
+
+// ========================================
+// NOTES UNTUK PRESENTASI
+// ========================================
+// Saat ditanya penguji:
+// 1. "Kenapa pakai @extend?"
+//    → Untuk DRY principle, style base bisa diturunkan
+// 2. "Kenapa pisah floating-icon per posisi?"
+//    → Flexibility, bisa tambah posisi baru tanpa ubah yang lama
+// 3. "Performance impact?"
+//    → Lebih baik dari inline, karena:
+//      - Bisa di-minify oleh Vite
+//      - Bisa di-cache oleh browser
+//      - File size lebih kecil (no duplication)

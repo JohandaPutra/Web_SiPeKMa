@@ -1,20 +1,22 @@
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
 
     <!-- ! Hide app brand if navbar-full -->
-    <div class="app-brand demo mb-3 position-relative" style="height: 120px;">
+    <div class="app-brand demo mb-3">
         <a href="{{ url('/') }}"
             class="app-brand-link d-flex flex-column align-items-center justify-content-center text-center w-100 h-100">
             {{-- Menggunakan logo image --}}
             <span class="app-brand-logo demo mb-2">
                 <img src="{{ asset('assets/img/icons/Logo-Sipekma.png') }}" alt="Logo" width="160" height="160"
-                    style="object-fit: contain;">
+                    class="logo-image">
             </span>
             {{-- <span class="app-brand-text demo menu-text fw-bold fs-6">{{ config('variables.templateName') }}</span> --}}
         </a>
 
-        <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large d-block d-xl-none" 
-           style="position: absolute; top: 10px; right: 10px; z-index: 999;">
-            <i class="bx bx-x bx-sm d-flex align-items-center justify-content-center"></i>
+        {{-- Close button for mobile --}}
+        <a href="javascript:void(0);" 
+           class="layout-menu-toggle menu-link text-large ms-auto d-xl-none mobile-menu-close" 
+           id="mobile-menu-close">
+            <i class="bx bx-chevron-left bx-sm align-middle"></i>
         </a>
     </div>
 
@@ -113,7 +115,7 @@
     </ul>
 
     <!-- Menu Footer -->
-    <div class="menu-footer px-3 py-3 mt-auto" style="border-top: 1px solid rgba(0,0,0,0.05);">
+    <div class="menu-footer px-3 py-3 mt-auto">
         <div class="text-center">
             <small class="text-muted d-block mb-1">SIPEKMA v1.0</small>
             <small class="text-muted">© 2026 Universitas</small>

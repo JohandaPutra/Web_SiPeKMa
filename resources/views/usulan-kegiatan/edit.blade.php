@@ -30,12 +30,11 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-white border-bottom mb-3">
                     <div class="d-flex align-items-center">
-                        <div class="avatar avatar-sm me-3"
-                            style="background: linear-gradient(135deg, #f3541d 0%, #ff7849 100%); border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bx bx-edit text-white" style="font-size: 20px;"></i>
+                        <div class="icon-wrapper icon-wrapper-sm bg-gradient-primary me-3">
+                            <i class="bx bx-edit text-white icon-md"></i>
                         </div>
                         <div>
-                            <h5 class="card-title mb-0" style="color: #495057; font-weight: 600;">Form Edit Usulan</h5>
+                            <h5 class="card-title mb-0 text-dark fw-semibold">Form Edit Usulan</h5>
                             <p class="mb-0 small text-muted">Perbarui data usulan kegiatan</p>
                         </div>
                     </div>

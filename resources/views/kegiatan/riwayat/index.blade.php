@@ -98,7 +98,7 @@
                         @endif
 
                         <label class="form-label mb-0 text-nowrap d-none d-sm-inline">Tampilkan:</label>
-                        <select name="per_page" class="form-select form-select-sm" style="width: auto; min-width: 80px;" onchange="this.form.submit()">
+                        <select name="per_page" class="form-select form-select-sm w-auto min-w-80px" onchange="this.form.submit()">
                             <option value="5" {{ request('per_page', 10) == 5 ? 'selected' : '' }}>5</option>
                             <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
                             <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
@@ -122,7 +122,7 @@
     </div>
     <div class="card-body">
         @if($kegiatans->count() > 0)
-        <div class="table-responsive text-nowrap">
+        <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
                     <tr>
@@ -144,17 +144,21 @@
                     @foreach($kegiatans as $index => $kegiatan)
                     <tr>
                         <td>{{ $index + 1 }}</td>
-                        <td>
-                            <strong>{{ $kegiatan->nama_kegiatan }}</strong>
+                        <td class="td-kegiatan-name">
+                            <div>
+                                <strong class="d-block">{{ $kegiatan->nama_kegiatan }}</strong>
+                            </div>
                         </td>
                         <td>
                             <span class="badge bg-label-info">{{ $kegiatan->jenisKegiatan->nama ?? '-' }}</span>
                         </td>
-                        <td>
-                            {{ \Carbon\Carbon::parse($kegiatan->tanggal_mulai)->format('d M Y') }}
-                            @if($kegiatan->tanggal_mulai != $kegiatan->tanggal_akhir)
-                            <br><small class="text-muted">s/d {{ \Carbon\Carbon::parse($kegiatan->tanggal_akhir)->format('d M Y') }}</small>
-                            @endif
+                        <td class="text-nowrap">
+                            <div class="d-flex flex-column">
+                                <span>{{ \Carbon\Carbon::parse($kegiatan->tanggal_mulai)->format('d M Y') }}</span>
+                                @if($kegiatan->tanggal_mulai != $kegiatan->tanggal_akhir)
+                                <small class="text-muted">s/d {{ \Carbon\Carbon::parse($kegiatan->tanggal_akhir)->format('d M Y') }}</small>
+                                @endif
+                            </div>
                         </td>
                         @if(Auth::check() && Auth::user()->isWadek())
                         <td>
@@ -203,12 +207,12 @@
                             }
                             @endphp
                             <div class="d-flex align-items-center">
-                                <div class="progress flex-grow-1 me-2" style="height: 8px; width: 80px;">
+                                <div class="progress flex-grow-1 me-2 progress-sm w-80px">
                                     <div class="progress-bar bg-success" role="progressbar"
-                                         style="width: {{ $progress }}%"
                                          aria-valuenow="{{ $progress }}"
                                          aria-valuemin="0"
-                                         aria-valuemax="100">
+                                         aria-valuemax="100"
+                                         style="width: {{ $progress }}%">
                                     </div>
                                 </div>
                                 <small class="text-muted">{{ $progress }}%</small>

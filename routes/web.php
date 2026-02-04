@@ -170,6 +170,8 @@ Route::middleware(['auth', 'role:super_admin,admin,hima,pembina_hima,kaprodi,wad
     Route::post('kegiatan/{kegiatan}/proposal', [KegiatanController::class, 'storeProposal'])->name('kegiatan.proposal.store');
     Route::post('kegiatan/{kegiatan}/proposal/submit', [KegiatanController::class, 'submitProposal'])->name('kegiatan.proposal.submit');
     Route::delete('kegiatan/{kegiatan}/proposal/{file}', [KegiatanController::class, 'deleteProposal'])->name('kegiatan.proposal.delete');
+    Route::get('proposal/download/{file}', [KegiatanController::class, 'downloadProposal'])->name('kegiatan.proposal.download');
+    Route::get('proposal/preview/{file}', [KegiatanController::class, 'previewProposal'])->name('kegiatan.proposal.preview');
 
     // Pendanaan routes
     Route::get('pendanaan', [KegiatanController::class, 'indexPendanaan'])->name('kegiatan.pendanaan.index');
@@ -178,6 +180,8 @@ Route::middleware(['auth', 'role:super_admin,admin,hima,pembina_hima,kaprodi,wad
     Route::post('kegiatan/{kegiatan}/pendanaan', [KegiatanController::class, 'storePendanaan'])->name('kegiatan.pendanaan.store');
     Route::post('kegiatan/{kegiatan}/pendanaan/submit', [KegiatanController::class, 'submitPendanaan'])->name('kegiatan.pendanaan.submit');
     Route::delete('kegiatan/{kegiatan}/pendanaan/{file}', [KegiatanController::class, 'deletePendanaan'])->name('kegiatan.pendanaan.delete');
+    Route::get('pendanaan/download/{file}', [KegiatanController::class, 'downloadPendanaan'])->name('kegiatan.pendanaan.download');
+    Route::get('pendanaan/preview/{file}', [KegiatanController::class, 'previewPendanaan'])->name('kegiatan.pendanaan.preview');
 
     // Laporan routes
     Route::get('laporan', [KegiatanController::class, 'indexLaporan'])->name('kegiatan.laporan.index');
@@ -186,6 +190,8 @@ Route::middleware(['auth', 'role:super_admin,admin,hima,pembina_hima,kaprodi,wad
     Route::post('kegiatan/{kegiatan}/laporan', [KegiatanController::class, 'storeLaporan'])->name('kegiatan.laporan.store');
     Route::post('kegiatan/{kegiatan}/laporan/submit', [KegiatanController::class, 'submitLaporan'])->name('kegiatan.laporan.submit');
     Route::delete('kegiatan/{kegiatan}/laporan/{file}', [KegiatanController::class, 'deleteLaporan'])->name('kegiatan.laporan.delete');
+    Route::get('laporan/download/{file}', [KegiatanController::class, 'downloadLaporan'])->name('kegiatan.laporan.download');
+    Route::get('laporan/preview/{file}', [KegiatanController::class, 'previewLaporan'])->name('kegiatan.laporan.preview');
 });
 
 // Test Toast route (hapus setelah testing selesai)

@@ -26,12 +26,11 @@
         <div class="card-header bg-white border-bottom">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
-                    <div class="avatar avatar-sm me-3"
-                        style="background: linear-gradient(135deg, #f3541d 0%, #ff7849 100%); border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                        <i class="bx bx-table text-white" style="font-size: 20px;"></i>
+                    <div class="icon-wrapper icon-wrapper-sm bg-gradient-orange me-3">
+                        <i class="bx bx-table text-white icon-md"></i>
                     </div>
                     <div>
-                        <h5 class="card-title mb-0" style="color: #495057; font-weight: 600;">Manage Users</h5>
+                        <h5 class="card-title mb-0 text-dark fw-semibold">Manage Users</h5>
                         <p class="mb-0 small text-muted">Total users: {{ count($users) }}</p>
                     </div>
                 </div>
@@ -50,7 +49,7 @@
                 <div class="dt-length"></div>
             </div>
             <div class="table-responsive">
-                <table id="users-table" class="table table-hover nowrap" style="width:100%; white-space: nowrap;">
+                <table id="users-table" class="table table-hover nowrap w-100 text-nowrap">
                 <thead>
                     <tr>
                         <th>#</th>

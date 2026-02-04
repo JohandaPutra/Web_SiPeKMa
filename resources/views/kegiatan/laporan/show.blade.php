@@ -30,11 +30,13 @@
     <div class="col-lg-8">
         <!-- Informasi Kegiatan -->
         <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Informasi Kegiatan</h5>
-                <div>
-                    <span class="badge bg-{{ $kegiatan->tahapBadge }} me-1">{{ ucfirst($kegiatan->tahap) }}</span>
-                    <span class="badge bg-{{ $kegiatan->statusBadge }}">{{ ucfirst($kegiatan->status) }}</span>
+            <div class="card-header">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+                    <h5 class="card-title mb-0">Informasi Kegiatan</h5>
+                    <div class="d-flex gap-1 mt-2 mt-sm-0 ps-0 ps-sm-0">
+                        <span class="badge bg-{{ $kegiatan->tahapBadge }}">{{ ucfirst($kegiatan->tahap) }}</span>
+                        <span class="badge bg-{{ $kegiatan->statusBadge }}">{{ ucfirst($kegiatan->status) }}</span>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -97,32 +99,66 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="d-flex align-items-center mb-3">
+                {{-- OPSI 2: Icon & info sejajar, button di bawah (MOBILE) --}}
+                <div class="d-md-none">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-shrink-0">
+                            <span class="badge bg-success p-3">
+                                <i class="bx bx-file-blank icon-file-lg"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">{{ $laporanFile->file_name }}</h6>
+                            <div class="text-muted small">
+                                <div class="mb-1">
+                                    <i class="bx bx-calendar me-1"></i>
+                                    {{ $laporanFile->uploaded_at->format('d M Y H:i') }}
+                                </div>
+                                <div class="mb-1">
+                                    <i class="bx bx-data me-1"></i>
+                                    {{ $laporanFile->fileSizeFormatted }}
+                                </div>
+                                <div>
+                                    <i class="bx bx-user me-1"></i>
+                                    {{ $laporanFile->uploader->username }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <a href="{{ route('kegiatan.laporan.download', $laporanFile->id) }}"
+                           class="btn btn-primary w-100">
+                            <i class="bx bx-download me-1"></i> Download File LPJ
+                        </a>
+                    </div>
+                </div>
+
+                {{-- DESKTOP LAYOUT (unchanged) --}}
+                <div class="d-none d-md-flex align-items-center mb-3">
                     <div class="flex-shrink-0">
                         <span class="badge bg-success p-3">
-                            <i class="bx bx-file-blank" style="font-size: 1.5rem;"></i>
+                            <i class="bx bx-file-blank icon-file-lg"></i>
                         </span>
                     </div>
                     <div class="flex-grow-1 ms-3">
                         <h6 class="mb-1">{{ $laporanFile->file_name }}</h6>
                         <div class="text-muted small">
-                            <span class="me-3">
+                            <span class="me-3 d-inline-block">
                                 <i class="bx bx-calendar me-1"></i>
                                 {{ $laporanFile->uploaded_at->format('d M Y H:i') }}
                             </span>
-                            <span class="me-3">
+                            <span class="me-3 d-inline-block">
                                 <i class="bx bx-data me-1"></i>
                                 {{ $laporanFile->fileSizeFormatted }}
                             </span>
-                            <span>
+                            <span class="d-inline-block">
                                 <i class="bx bx-user me-1"></i>
                                 {{ $laporanFile->uploader->username }}
                             </span>
                         </div>
                     </div>
-                    <div class="flex-shrink-0">
-                        <a href="{{ asset('storage/' . $laporanFile->file_path) }}"
-                           target="_blank"
+                    <div class="flex-shrink-0 ms-2">
+                        <a href="{{ route('kegiatan.laporan.download', $laporanFile->id) }}"
                            class="btn btn-primary btn-sm">
                             <i class="bx bx-download me-1"></i> Download
                         </a>
@@ -130,13 +166,17 @@
                 </div>
 
                 <!-- PDF Viewer -->
-                <div class="border rounded p-2 bg-light">
+                <div class="border rounded p-2 bg-light d-none d-md-block">
                     <iframe
-                        src="{{ asset('storage/' . $laporanFile->file_path) }}"
+                        src="{{ route('kegiatan.laporan.preview', $laporanFile->id) }}"
                         width="100%"
                         height="600px"
                         style="border: none;">
                     </iframe>
+                </div>
+                <div class="alert alert-info d-md-none mb-0">
+                    <i class="bx bx-info-circle me-2"></i>
+                    <strong>Preview tidak tersedia di mobile.</strong> Silakan gunakan tombol Download untuk melihat file.
                 </div>
             </div>
         </div>
@@ -165,53 +205,33 @@
                 @if($laporanHistories->count() > 0)
                 <div class="timeline">
                     @foreach($laporanHistories->sortByDesc('approved_at') as $history)
-                    <div class="timeline-item mb-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="d-flex">
-                                <div class="flex-shrink-0 me-3">
-                                    @if($history->action === 'disetujui')
-                                    <span class="badge bg-success p-2">
-                                        <i class="bx bx-check"></i>
-                                    </span>
-                                    @elseif($history->action === 'ditolak')
-                                    <span class="badge bg-danger p-2">
-                                        <i class="bx bx-x"></i>
-                                    </span>
-                                    @else
-                                    <span class="badge bg-warning p-2">
-                                        <i class="bx bx-Revisi"></i>
-                                    </span>
-                                    @endif
+                    <div class="timeline-item mb-4">
+                        <div class="d-flex align-items-start">
+                            <div class="timeline-indicator timeline-indicator-{{ $history->actionBadge }}">
+                                <i class='bx bx-{{ $history->action == "disetujui" ? "check" : ($history->action == "revisi" ? "revisi" : "x") }}'></i>
+                            </div>
+                            <div class="ms-3 flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <h6 class="mb-0">{{ $history->approver->role->display_name }}</h6>
+                                    <small class="text-muted">{{ $history->approved_at->format('d M Y H:i') }}</small>
                                 </div>
-                                <div>
-                                    <h6 class="mb-1">
-                                        {{ match($history->action) {
-                                            'disetujui' => 'Disetujui',
-                                            'ditolak' => 'Ditolak',
-                                            'revisi' => 'Minta Revisi',
-                                            default => ucfirst($history->action)
-                                        } }}
-                                        oleh {{ $history->approver->role->display_name }}
-                                    </h6>
-                                    <small class="text-muted">
-                                        <i class="bx bx-calendar me-1"></i>
-                                        {{ $history->approved_at->format('d M Y H:i') }}
-                                    </small>
-                                    @if($history->comment)
-                                    <div class="alert alert-secondary mt-2 mb-0">
-                                        <strong>Komentar:</strong> {{ $history->comment }}
-                                    </div>
-                                    @endif
+                                <span class="badge bg-{{ $history->actionBadge }} mb-2">
+                                    {{ ucfirst($history->action) }}
+                                </span>
+                                @if($history->comment)
+                                <div class="alert alert-secondary mb-0 mt-2">
+                                    <small><strong>Komentar:</strong> {{ $history->comment }}</small>
                                 </div>
+                                @endif
                             </div>
                         </div>
                     </div>
                     @endforeach
                 </div>
                 @else
-                <div class="text-center py-4">
-                    <i class="bx bx-history bx-lg text-muted mb-2"></i>
-                    <p class="text-muted mb-0">Belum ada riwayat persetujuan</p>
+                <div class="text-center text-muted py-4">
+                    <i class="bx bx-info-circle bx-lg mb-2"></i>
+                    <p class="text-muted mb-0">Belum ada riwayat persetujuan laporan</p>
                 </div>
                 @endif
             </div>

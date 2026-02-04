@@ -30,11 +30,13 @@
     <div class="col-lg-8">
         <!-- Informasi Kegiatan -->
         <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Informasi Kegiatan</h5>
-                <div>
-                    <span class="badge bg-{{ $kegiatan->tahapBadge }} me-1">{{ ucfirst($kegiatan->tahap) }}</span>
-                    <span class="badge bg-{{ $kegiatan->statusBadge }}">{{ ucfirst($kegiatan->status) }}</span>
+            <div class="card-header">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+                    <h5 class="card-title mb-0">Informasi Kegiatan</h5>
+                    <div class="d-flex gap-1 mt-2 mt-sm-0 ps-0 ps-sm-0">
+                        <span class="badge bg-{{ $kegiatan->tahapBadge }}">{{ ucfirst($kegiatan->tahap) }}</span>
+                        <span class="badge bg-{{ $kegiatan->statusBadge }}">{{ ucfirst($kegiatan->status) }}</span>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -87,32 +89,66 @@
                 </h5>
             </div>
             <div class="card-body">
-                <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center mb-3">
-                    <div class="flex-shrink-0 mb-2 mb-sm-0">
+                {{-- OPSI 2: Icon & info sejajar, button di bawah (MOBILE) --}}
+                <div class="d-md-none">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-shrink-0">
+                            <span class="badge bg-danger p-3">
+                                <i class="bx bx-file-blank icon-file-lg"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1 text-break">{{ $proposalFile->file_name }}</h6>
+                            <div class="text-muted small">
+                                <div class="mb-1">
+                                    <i class="bx bx-calendar me-1"></i>
+                                    {{ $proposalFile->uploaded_at->format('d M Y H:i') }}
+                                </div>
+                                <div class="mb-1">
+                                    <i class="bx bx-data me-1"></i>
+                                    {{ $proposalFile->fileSizeFormatted }}
+                                </div>
+                                <div>
+                                    <i class="bx bx-user me-1"></i>
+                                    {{ $proposalFile->uploader->username }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <a href="{{ route('kegiatan.proposal.download', $proposalFile->id) }}"
+                           class="btn btn-primary w-100">
+                            <i class="bx bx-download me-1"></i> Download File Proposal
+                        </a>
+                    </div>
+                </div>
+
+                {{-- DESKTOP LAYOUT (unchanged) --}}
+                <div class="d-none d-md-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
                         <span class="badge bg-danger p-3">
-                            <i class="bx bx-file-blank" style="font-size: 1.5rem;"></i>
+                            <i class="bx bx-file-blank icon-file-lg"></i>
                         </span>
                     </div>
-                    <div class="flex-grow-1 ms-sm-3">
+                    <div class="flex-grow-1 ms-3">
                         <h6 class="mb-1 text-break">{{ $proposalFile->file_name }}</h6>
                         <div class="text-muted small">
-                            <span class="me-3 d-block d-sm-inline mb-1 mb-sm-0">
+                            <span class="me-3 d-inline-block">
                                 <i class="bx bx-calendar me-1"></i>
                                 {{ $proposalFile->uploaded_at->format('d M Y H:i') }}
                             </span>
-                            <span class="me-3">
+                            <span class="me-3 d-inline-block">
                                 <i class="bx bx-data me-1"></i>
                                 {{ $proposalFile->fileSizeFormatted }}
                             </span>
-                            <span>
+                            <span class="d-inline-block">
                                 <i class="bx bx-user me-1"></i>
                                 {{ $proposalFile->uploader->username }}
                             </span>
                         </div>
                     </div>
-                    <div class="flex-shrink-0">
-                        <a href="{{ asset('storage/' . $proposalFile->file_path) }}"
-                           target="_blank"
+                    <div class="flex-shrink-0 ms-2">
+                        <a href="{{ route('kegiatan.proposal.download', $proposalFile->id) }}"
                            class="btn btn-primary btn-sm">
                             <i class="bx bx-download me-1"></i> Download
                         </a>
@@ -120,13 +156,17 @@
                 </div>
 
                 <!-- PDF Viewer -->
-                <div class="border rounded p-2 bg-light">
+                <div class="border rounded p-2 bg-light d-none d-md-block">
                     <iframe
-                        src="{{ asset('storage/' . $proposalFile->file_path) }}"
+                        src="{{ route('kegiatan.proposal.preview', $proposalFile->id) }}"
                         width="100%"
                         height="600px"
-                        style="border: none;">
+                        class="border-0">
                     </iframe>
+                </div>
+                <div class="alert alert-info d-md-none mb-0">
+                    <i class="bx bx-info-circle me-2"></i>
+                    <strong>Preview tidak tersedia di mobile.</strong> Silakan gunakan tombol Download untuk melihat file.
                 </div>
             </div>
         </div>
@@ -289,8 +329,7 @@
                     }
                     @endphp
                     <div class="progress">
-                        <div class="progress-bar bg-{{ $progressColor }}" role="progressbar" style="width: {{ $progress }}%"
-                             aria-valuenow="{{ $progress }}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar bg-{{ $progressColor }}" role="progressbar" aria-valuenow="{{ $progress }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $progress }}%">
                             {{ $progress }}%
                         </div>
                     </div>

@@ -30,11 +30,13 @@
     <div class="col-lg-8">
         <!-- Informasi Kegiatan -->
         <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Informasi Kegiatan</h5>
-                <div>
-                    <span class="badge bg-{{ $kegiatan->tahapBadge }} me-1">{{ ucfirst($kegiatan->tahap) }}</span>
-                    <span class="badge bg-{{ $kegiatan->statusBadge }}">{{ ucfirst($kegiatan->status) }}</span>
+            <div class="card-header">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+                    <h5 class="card-title mb-0">Informasi Kegiatan</h5>
+                    <div class="d-flex gap-1 mt-2 mt-sm-0 ps-0 ps-sm-0">
+                        <span class="badge bg-{{ $kegiatan->tahapBadge }}">{{ ucfirst($kegiatan->tahap) }}</span>
+                        <span class="badge bg-{{ $kegiatan->statusBadge }}">{{ ucfirst($kegiatan->status) }}</span>
+                    </div>
                 </div>
             </div>
             <div class="card-body">

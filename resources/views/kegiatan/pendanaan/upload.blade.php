@@ -51,25 +51,25 @@
                     </div>
                 </div>
 
-                @if($kegiatan->tahap === 'pendanaan' && $kegiatan->status === 'revisi' && $lastRevisi)
+                @if($kegiatan->status === 'revisi' && $lastRevision)
                 <div class="alert alert-warning">
                     <h6 class="alert-heading">
                         <i class="bx bx-error-circle me-1"></i> Revisi Diperlukan
                     </h6>
                     <div class="mb-2">
-                        <strong>Dari:</strong> {{ $lastRevisi->approver->username }}
-                        ({{ match($lastRevisi->approver->role->role_name) {
+                        <strong>Dari:</strong> {{ $lastRevision->approver->name }}
+                        ({{ match($lastRevision->approver->role->name) {
                             'pembina_hima' => 'Pembina Hima',
                             'kaprodi' => 'Kaprodi',
                             'wadek_iii' => 'Wadek III',
-                            default => $lastRevisi->approver->role->role_name
+                            default => $lastRevision->approver->role->name
                         } }})
                     </div>
                     <div class="mb-0">
                         <strong>Catatan:</strong><br>
-                        {{ $lastRevisi->comment }}
+                        {{ $lastRevision->comment }}
                     </div>
-                    <small class="text-muted">{{ $lastRevisi->created_at->diffForHumans() }}</small>
+                    <small class="text-muted">{{ $lastRevision->approved_at->diffForHumans() }}</small>
                 </div>
                 @endif
 

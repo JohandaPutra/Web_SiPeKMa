@@ -27,7 +27,7 @@
         <!-- Status Card -->
         <div class="col-12 mb-4">
             <div class="card border-0 shadow-sm">
-                <div class="card-body text-center py-4 bg-white" style="border-radius: 12px;">
+                <div class="card-body text-center py-4 bg-white rounded-custom-lg">
                     <div class="mb-3">
                         <i class="bx bx-bulb text-primary display-4"></i>
                     </div>
@@ -45,12 +45,11 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom mb-5">
                     <div class="d-flex align-items-center">
-                        <div class="avatar avatar-sm me-3 bg-primary"
-                            style="border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bx bx-info-circle text-white" style="font-size: 20px;"></i>
+                        <div class="icon-wrapper icon-wrapper-sm bg-primary me-3">
+                            <i class="bx bx-info-circle text-white icon-md"></i>
                         </div>
                         <div>
-                            <h5 class="card-title mb-0" style="color: #495057; font-weight: 600;">Informasi Kegiatan</h5>
+                            <h5 class="card-title mb-0 text-dark fw-semibold">Informasi Kegiatan</h5>
                             <p class="mb-0 small text-muted">Detail lengkap usulan kegiatan</p>
                         </div>
                     </div>
@@ -112,12 +111,11 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom mb-5">
                     <div class="d-flex align-items-center">
-                        <div class="avatar avatar-sm me-3"
-                            style="background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%); border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bx bx-calendar text-white" style="font-size: 20px;"></i>
+                        <div class="icon-wrapper icon-wrapper-sm bg-gradient-info me-3">
+                            <i class="bx bx-calendar text-white icon-md"></i>
                         </div>
                         <div>
-                            <h5 class="card-title mb-0" style="color: #495057; font-weight: 600;">Jadwal Kegiatan</h5>
+                            <h5 class="card-title mb-0 text-dark fw-semibold">Jadwal Kegiatan</h5>
                             <p class="mb-0 small text-muted">Timeline pelaksanaan</p>
                         </div>
                     </div>
@@ -173,12 +171,11 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom mb-5">
                     <div class="d-flex align-items-center">
-                        <div class="avatar avatar-sm me-3"
-                            style="background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%); border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bx bx-user text-white" style="font-size: 20px;"></i>
+                        <div class="icon-wrapper icon-wrapper-sm bg-gradient-purple me-3">
+                            <i class="bx bx-user text-white icon-md"></i>
                         </div>
                         <div>
-                            <h5 class="card-title mb-0" style="color: #495057; font-weight: 600;">Pengaju</h5>
+                            <h5 class="card-title mb-0 text-dark fw-semibold">Pengaju</h5>
                             <p class="mb-0 small text-muted">Informasi pengusul</p>
                         </div>
                     </div>
@@ -201,12 +198,11 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom mb-5">
                     <div class="d-flex align-items-center">
-                        <div class="avatar avatar-sm me-3"
-                            style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bx bx-time text-white" style="font-size: 20px;"></i>
+                        <div class="icon-wrapper icon-wrapper-sm bg-gradient-success me-3">
+                            <i class="bx bx-time text-white icon-md"></i>
                         </div>
                         <div>
-                            <h5 class="card-title mb-0" style="color: #495057; font-weight: 600;">Timeline</h5>
+                            <h5 class="card-title mb-0 text-dark fw-semibold">Timeline</h5>
                             <p class="mb-0 small text-muted">Riwayat usulan</p>
                         </div>
                     </div>
@@ -237,7 +233,7 @@
             <!-- Quick Actions -->
             <div class="card shadow-sm">
                 <div class="card-header bg-white border-bottom mb-5">
-                    <h5 class="card-title mb-0" style="color: #495057; font-weight: 600;">Quick Actions</h5>
+                    <h5 class="card-title mb-0 text-dark fw-semibold">Quick Actions</h5>
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
@@ -265,40 +261,3 @@
         </div>
     </div>
 @endsection
-
-@push('styles')
-    <style>
-        .timeline {
-            position: relative;
-            padding-left: 2rem;
-        }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 1.5rem;
-        }
-
-        .timeline-item:not(:last-child)::before {
-            content: '';
-            position: absolute;
-            left: -1.5rem;
-            top: 1.5rem;
-            width: 1px;
-            height: calc(100% + 0.5rem);
-            background: #dee2e6;
-        }
-
-        .timeline-point {
-            position: absolute;
-            left: -1.75rem;
-            top: 0.25rem;
-            width: 0.5rem;
-            height: 0.5rem;
-            border-radius: 50%;
-        }
-
-        .timeline-content {
-            margin-left: 0.5rem;
-        }
-    </style>
-@endpush

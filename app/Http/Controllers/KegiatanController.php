@@ -1344,7 +1344,14 @@ class KegiatanController extends Controller
 
         $kegiatan->load(['user', 'prodi']);
 
-        return view('kegiatan.laporan.upload', compact('kegiatan'));
+        // Get last revision comment if exists
+        $lastRevision = ApprovalHistory::where('kegiatan_id', $kegiatan->id)
+            ->where('tahap', 'laporan')
+            ->where('action', 'revisi')
+            ->latest()
+            ->first();
+
+        return view('kegiatan.laporan.upload', compact('kegiatan', 'lastRevision'));
     }
 
     /**
@@ -1527,5 +1534,77 @@ class KegiatanController extends Controller
 
         // Export using FastExcel
         return (new FastExcel($data))->download($filename . '.' . $extension);
+    }
+
+    /**
+     * Download proposal file
+     */
+    public function downloadProposal(KegiatanFile $file)
+    {
+        if (!Storage::disk('public')->exists($file->file_path)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return Storage::disk('public')->download($file->file_path, $file->file_name);
+    }
+
+    /**
+     * Preview proposal file
+     */
+    public function previewProposal(KegiatanFile $file)
+    {
+        if (!Storage::disk('public')->exists($file->file_path)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return Storage::disk('public')->response($file->file_path);
+    }
+
+    /**
+     * Download pendanaan file (RAB)
+     */
+    public function downloadPendanaan(KegiatanFile $file)
+    {
+        if (!Storage::disk('public')->exists($file->file_path)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return Storage::disk('public')->download($file->file_path, $file->file_name);
+    }
+
+    /**
+     * Preview pendanaan file (RAB)
+     */
+    public function previewPendanaan(KegiatanFile $file)
+    {
+        if (!Storage::disk('public')->exists($file->file_path)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return Storage::disk('public')->response($file->file_path);
+    }
+
+    /**
+     * Download laporan file (LPJ)
+     */
+    public function downloadLaporan(KegiatanFile $file)
+    {
+        if (!Storage::disk('public')->exists($file->file_path)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return Storage::disk('public')->download($file->file_path, $file->file_name);
+    }
+
+    /**
+     * Preview laporan file (LPJ)
+     */
+    public function previewLaporan(KegiatanFile $file)
+    {
+        if (!Storage::disk('public')->exists($file->file_path)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return Storage::disk('public')->response($file->file_path);
     }
 }

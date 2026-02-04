@@ -70,9 +70,11 @@
                     @foreach($kegiatans as $index => $kegiatan)
                     <tr>
                         <td>{{ $index + 1 }}</td>
-                        <td>
-                            <strong>{{ $kegiatan->nama_kegiatan }}</strong>
-                            <br><small class="text-muted">{{ Str::limit($kegiatan->deskripsi_kegiatan, 50) }}</small>
+                        <td class="td-kegiatan-name">
+                            <div>
+                                <strong class="d-block">{{ $kegiatan->nama_kegiatan }}</strong>
+                                <small class="text-muted">{{ Str::limit($kegiatan->deskripsi_kegiatan, 50) }}</small>
+                            </div>
                         </td>
                         <td><span class="badge bg-label-info">{{ $kegiatan->jenisKegiatan->nama ?? '-' }}</span></td>
                         <td>
