@@ -1,12 +1,12 @@
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
 
     <!-- ! Hide app brand if navbar-full -->
-    <div class="app-brand demo mb-3">
+    <div class="app-brand demo mb-4">
         <a href="{{ url('/') }}"
             class="app-brand-link d-flex flex-column align-items-center justify-content-center text-center w-100 h-100">
             {{-- Menggunakan logo image --}}
-            <span class="app-brand-logo demo mb-2">
-                <img src="{{ asset('assets/img/icons/Logo-Sipekma.png') }}" alt="Logo" width="160" height="160"
+            <span class="app-brand-logo demo">
+                <img src="{{ asset('assets/img/icons/Logo-Sipekma.png') }}" alt="Logo" width="220" height="220"
                     class="logo-image">
             </span>
             {{-- <span class="app-brand-text demo menu-text fw-bold fs-6">{{ config('variables.templateName') }}</span> --}}

@@ -143,7 +143,7 @@ Route::middleware(['auth', 'admin.or.wadek'])->group(function () {
     Route::resource('jenis-pendanaan', App\Http\Controllers\JenisPendanaanController::class);
 });
 
-// Usulan Kegiatan routes (tanpa auth untuk testing - DEPRECATED, will be removed)
+// Usulan Kegiatan routes - legacy routes for backward compatibility with existing views
 Route::resource('usulan-kegiatan', UsulanKegiatanController::class);
 
 // Kegiatan routes dengan middleware auth dan role

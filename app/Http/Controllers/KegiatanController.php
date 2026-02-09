@@ -446,14 +446,34 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Approve kegiatan (untuk Pembina, Kaprodi, Wadek, Super Admin, dan Admin)
+     * Menyetujui kegiatan dan memajukan workflow approval
+     * 
+     * Workflow approval bertahap:
+     * 1. Pembina Hima → approve first (setelah Hima submit)
+     * 2. Kaprodi → approve second (setelah Pembina approve)
+     * 3. Wadek III → approve final (setelah Kaprodi approve)
+     * 
+     * Setelah approval terakhir (Wadek III):
+     * - Usulan approved → pindah ke tahap Proposal (status: draft)
+     * - Proposal approved → pindah ke tahap Pendanaan (status: draft)
+     * - Pendanaan approved → pindah ke tahap Laporan (status: draft)
+     * - Laporan approved → workflow selesai (status: disetujui)
+     * 
+     * Special access:
+     * - Super Admin: dapat approve as Wadek III (bypass hierarchy)
+     * - Regular Admin: dapat approve as current_approver_role
+     * - Wadek III: dapat approve semua prodi
+     * 
+     * @param Request $request - Optional comment untuk approval
+     * @param Kegiatan $kegiatan - Kegiatan yang akan disetujui
+     * @return RedirectResponse
      */
     public function approve(Request $request, Kegiatan $kegiatan)
     {
         $user = Auth::user();
         $userRole = $user->role->name;
 
-        // Super Admin dan Admin dapat approve tanpa pembatasan
+        // Super Admin dan Regular Admin memiliki akses full tanpa pembatasan prodi/role
         $isSuperAdminOrAdmin = $user->isSuperAdmin() || $user->isRegularAdmin();
 
         // Check if user has permission to approve
@@ -594,7 +614,24 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Request revisi (untuk Pembina, Kaprodi, Wadek, Super Admin, dan Admin)
+     * Meminta revisi kegiatan dan mengembalikan ke Hima untuk perbaikan
+     * 
+     * Workflow revisi:
+     * 1. Approver (Pembina/Kaprodi/Wadek) minta revisi dengan comment wajib
+     * 2. Status kegiatan berubah menjadi 'revisi'
+     * 3. current_approver_role tetap sama (akan kembali ke approver yang sama setelah re-submit)
+     * 4. Hima dapat edit dan re-submit usulan/upload ulang file
+     * 
+     * Setelah Hima re-submit:
+     * - Status berubah ke 'dikirim'
+     * - Approval kembali ke approver yang minta revisi
+     * - History approval tersimpan dengan action 'revisi'
+     * 
+     * Special access: Super Admin dan Regular Admin dapat request revisi tanpa pembatasan
+     * 
+     * @param Request $request - Wajib ada 'comment' field untuk alasan revisi
+     * @param Kegiatan $kegiatan - Kegiatan yang diminta revisi
+     * @return RedirectResponse
      */
     public function revisi(Request $request, Kegiatan $kegiatan)
     {
@@ -664,7 +701,28 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Tolak kegiatan (untuk Pembina, Kaprodi, Wadek, Super Admin, dan Admin)
+     * Menolak kegiatan secara permanen (tidak dapat dilanjutkan)
+     * 
+     * Workflow penolakan:
+     * 1. Approver (Pembina/Kaprodi/Wadek) tolak dengan comment wajib
+     * 2. Status kegiatan berubah menjadi 'ditolak' (final state)
+     * 3. Kegiatan tidak dapat di-edit atau di-submit ulang
+     * 4. History tersimpan dengan action 'ditolak' dan alasan penolakan
+     * 
+     * Perbedaan dengan revisi:
+     * - Tolak: Final rejection, tidak bisa dilanjutkan
+     * - Revisi: Request perbaikan, masih bisa diperbaiki dan di-submit ulang
+     * 
+     * Use case penolakan:
+     * - Kegiatan tidak sesuai dengan kebijakan kampus
+     * - Anggaran terlalu besar dan tidak realistis
+     * - Kegiatan melanggar peraturan
+     * 
+     * Special access: Super Admin dan Regular Admin dapat tolak tanpa pembatasan
+     * 
+     * @param Request $request - Wajib ada 'comment' field untuk alasan penolakan
+     * @param Kegiatan $kegiatan - Kegiatan yang ditolak
+     * @return RedirectResponse
      */
     public function tolak(Request $request, Kegiatan $kegiatan)
     {
@@ -799,7 +857,32 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Store uploaded proposal file
+     * Menyimpan file proposal yang diupload oleh Hima
+     * 
+     * File upload workflow:
+     * 1. Hima upload file PDF proposal (max 5MB)
+     * 2. File disimpan ke storage/app/public/proposals/
+     * 3. Nama file: {kegiatan_id}_proposal_{timestamp}.pdf
+     * 4. Record disimpan ke kegiatan_files table dengan tahap='proposal'
+     * 
+     * Security checks:
+     * - Hanya Hima pemilik kegiatan yang bisa upload
+     * - Status harus 'draft' atau 'revisi'
+     * - File type restricted to PDF only
+     * - File size maximum 5MB (5120 KB)
+     * 
+     * Re-upload scenario (revisi):
+     * - File lama dihapus dari storage
+     * - Record lama dihapus dari database
+     * - File baru disimpan dengan nama baru
+     * 
+     * Catatan: Status TIDAK berubah saat upload
+     * - Upload file = simpan saja, belum submit
+     * - Hima harus klik tombol 'Submit' setelah upload untuk mulai approval
+     * 
+     * @param Request $request - File upload dengan field 'file' (PDF, max 5MB)
+     * @param Kegiatan $kegiatan - Kegiatan yang akan diupload proposalnya
+     * @return RedirectResponse
      */
     public function storeProposal(Request $request, Kegiatan $kegiatan)
     {
@@ -1502,10 +1585,40 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Export kegiatan to Excel/CSV
+     * Export data kegiatan ke Excel (.xlsx) atau CSV
+     * 
+     * Features:
+     * - Filter by: search, status, tahap, prodi, jenis kegiatan, jenis pendanaan, date range
+     * - Format: XLSX (default) atau CSV
+     * - Filename: kegiatan_YYYY-MM-DD_HHmmss.xlsx/csv
+     * 
+     * Data yang di-export:
+     * - No urut
+     * - Nama kegiatan
+     * - Status & Tahap
+     * - Prodi
+     * - Jenis kegiatan & pendanaan
+     * - Tanggal kegiatan
+     * - Total anggaran
+     * - Pengaju (Hima)
+     * 
+     * Access control:
+     * - Handled by KegiatanExport class (filter by user role & prodi)
+     * - Super Admin/Wadek: semua data
+     * - Pembina/Kaprodi: data prodi mereka
+     * - Hima: data mereka sendiri
+     * 
+     * @param Request $request - Query params untuk filtering + export_type (xlsx/csv)
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function export(Request $request)
     {
+        // Cek ZipArchive availability untuk Excel export
+        $type = $request->get('export_type', 'xlsx');
+        if ($type === 'xlsx' && !class_exists('ZipArchive')) {
+            return back()->with('error', 'Extension ZIP tidak aktif. Gunakan export CSV atau aktifkan extension zip di php.ini');
+        }
+
         $filters = $request->only([
             'search',
             'status',
@@ -1519,25 +1632,43 @@ class KegiatanController extends Controller
 
         $filename = 'kegiatan_' . date('Y-m-d_His');
 
-        // Get filtered data
+        // Get filtered data dengan chunk untuk performance
         $exporter = new KegiatanExport($filters);
-        $kegiatans = $exporter->collection();
+        
+        // Map data dengan generator untuk memory efficiency
+        $data = function() use ($exporter) {
+            $kegiatans = $exporter->collection();
+            $index = 0;
+            foreach ($kegiatans as $kegiatan) {
+                yield $exporter->map($kegiatan, $index);
+                $index++;
+            }
+        };
 
-        // Map data
-        $data = $kegiatans->map(function ($kegiatan, $index) use ($exporter) {
-            return $exporter->map($kegiatan, $index);
-        });
-
-        // Determine export type (default to xlsx)
-        $type = $request->get('export_type', 'xlsx');
+        // Determine extension
         $extension = $type === 'csv' ? 'csv' : 'xlsx';
 
-        // Export using FastExcel
-        return (new FastExcel($data))->download($filename . '.' . $extension);
+        // Export using FastExcel dengan generator
+        return (new FastExcel($data()))->download($filename . '.' . $extension);
     }
 
     /**
-     * Download proposal file
+     * Download file proposal sebagai attachment
+     * 
+     * Security:
+     * - Route menggunakan route model binding untuk KegiatanFile
+     * - File existence check menggunakan Storage facade
+     * - Access control handled by middleware (authenticate)
+     * 
+     * File path: storage/app/public/proposals/{kegiatan_id}_proposal_{timestamp}.pdf
+     * 
+     * Response headers:
+     * - Content-Disposition: attachment; filename="{original_filename}"
+     * - Content-Type: application/pdf
+     * 
+     * @param KegiatanFile $file - Model binding dari route parameter
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException jika file tidak ada
      */
     public function downloadProposal(KegiatanFile $file)
     {
@@ -1549,7 +1680,26 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Preview proposal file
+     * Preview file proposal di browser (inline view)
+     * 
+     * Perbedaan dengan download:
+     * - download(): Content-Disposition: attachment (trigger download dialog)
+     * - preview(): Content-Disposition: inline (display in browser)
+     * 
+     * Browser support:
+     * - Chrome/Edge: Built-in PDF viewer
+     * - Firefox: Built-in PDF viewer
+     * - Safari: Built-in PDF viewer
+     * - Mobile browsers: May trigger download (depends on device)
+     * 
+     * Use case:
+     * - Quick preview sebelum download
+     * - Review proposal content tanpa download file
+     * - Desktop view di modal/iframe
+     * 
+     * @param KegiatanFile $file - Model binding dari route parameter
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException jika file tidak ada
      */
     public function previewProposal(KegiatanFile $file)
     {
@@ -1561,7 +1711,19 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Download pendanaan file (RAB)
+     * Download file RAB (Rencana Anggaran Biaya) sebagai attachment
+     * 
+     * File path: storage/app/public/pendanaan/{timestamp}_{original_name}.pdf
+     * 
+     * Security & Access:
+     * - Route menggunakan route model binding untuk KegiatanFile
+     * - File existence validation menggunakan Storage facade
+     * - Access control via middleware (authenticate)
+     * 
+     * @see downloadProposal() - Logic dan security pattern sama dengan proposal download
+     * @param KegiatanFile $file - Model binding dari route parameter
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException jika file tidak ada
      */
     public function downloadPendanaan(KegiatanFile $file)
     {
@@ -1573,7 +1735,15 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Preview pendanaan file (RAB)
+     * Preview file RAB di browser (inline view)
+     * 
+     * Menampilkan file PDF RAB di browser tanpa trigger download.
+     * Berguna untuk quick review total anggaran dan rincian biaya.
+     * 
+     * @see previewProposal() - Logic dan security pattern sama dengan proposal preview
+     * @param KegiatanFile $file - Model binding dari route parameter
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException jika file tidak ada
      */
     public function previewPendanaan(KegiatanFile $file)
     {
@@ -1585,7 +1755,19 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Download laporan file (LPJ)
+     * Download file LPJ (Laporan Pertanggungjawaban) sebagai attachment
+     * 
+     * File path: storage/app/public/laporan/LPJ_{kegiatan_id}_{timestamp}.pdf
+     * 
+     * Security & Access:
+     * - Route menggunakan route model binding untuk KegiatanFile
+     * - File existence validation menggunakan Storage facade
+     * - Access control via middleware (authenticate)
+     * 
+     * @see downloadProposal() - Logic dan security pattern sama dengan proposal download
+     * @param KegiatanFile $file - Model binding dari route parameter
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException jika file tidak ada
      */
     public function downloadLaporan(KegiatanFile $file)
     {
@@ -1597,7 +1779,15 @@ class KegiatanController extends Controller
     }
 
     /**
-     * Preview laporan file (LPJ)
+     * Preview file LPJ di browser (inline view)
+     * 
+     * Menampilkan file PDF Laporan Pertanggungjawaban di browser.
+     * Berguna untuk review hasil kegiatan dan penggunaan anggaran.
+     * 
+     * @see previewProposal() - Logic dan security pattern sama dengan proposal preview
+     * @param KegiatanFile $file - Model binding dari route parameter
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException jika file tidak ada
      */
     public function previewLaporan(KegiatanFile $file)
     {

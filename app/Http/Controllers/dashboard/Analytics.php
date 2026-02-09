@@ -170,7 +170,7 @@ class Analytics extends Controller
         ->count();
     }
 
-    return view('content.dashboard.dashboards-analytics', compact(
+    return view('dashboard.index', compact(
       'totalUsulan',
       'proposalDisetujui',
       'pendanaan',

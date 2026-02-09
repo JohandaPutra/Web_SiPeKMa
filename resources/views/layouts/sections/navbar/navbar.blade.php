@@ -65,32 +65,26 @@
         <!-- User -->
         <li class="nav-item navbar-dropdown dropdown-user dropdown">
             <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
-                <div class="avatar avatar-online">
-                    <img src="{{ asset('assets/img/avatars/1.png') }}" alt class="w-px-40 h-auto rounded-circle">
-                </div>
+                <button class="btn btn-icon btn-outline-primary rounded-circle" type="button">
+                    <i class="bx bx-power-off bx-sm"></i>
+                </button>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li>
                     <a class="dropdown-item" href="javascript:void(0);">
-                        <div class="d-flex">
-                            <div class="flex-shrink-0 me-3">
-                                <div class="avatar avatar-online">
-                                    <img src="{{ asset('assets/img/avatars/1.png') }}" alt
-                                        class="w-px-40 h-auto rounded-circle">
-                                </div>
-                            </div>
-                            <div class="flex-grow-1">
-                                @auth
-                                <h6 class="mb-0">{{ Auth::user()->name }}</h6>
-                                <small class="text-muted">{{ Auth::user()->role->display_name ?? 'User' }}</small>
+                        <div class="d-flex flex-column">
+                            @auth
+                            <h6 class="mb-2 fw-bold">{{ Auth::user()->name }}</h6>
+                            <div class="d-flex gap-1 flex-wrap">
                                 @if(Auth::user()->prodi)
-                                <br><small class="badge bg-label-info">{{ Auth::user()->prodi->nama_prodi }}</small>
+                                <small class="badge bg-label-primary">{{ Auth::user()->prodi->nama_prodi }}</small>
                                 @endif
-                                @else
-                                <h6 class="mb-0">Guest</h6>
-                                <small class="text-muted">Not Logged In</small>
-                                @endauth
+                                <small class="badge bg-label-success">{{ Auth::user()->role->display_name ?? 'User' }}</small>
                             </div>
+                            @else
+                            <h6 class="mb-0">Guest</h6>
+                            <small class="text-muted">Not Logged In</small>
+                            @endauth
                         </div>
                     </a>
                 </li>
@@ -99,8 +93,18 @@
                 </li>
                 @auth
                 <li>
+                    <a class="dropdown-item" href="{{ route('dashboard-analytics') }}">
+                        <i class="bx bx-home-circle bx-md me-3"></i><span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
                     <a class="dropdown-item" href="{{ route('kegiatan.index') }}">
                         <i class="bx bx-file bx-md me-3"></i><span>Kegiatan Saya</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ route('kegiatan.riwayat') }}">
+                        <i class="bx bx-history bx-md me-3"></i><span>Riwayat Kegiatan</span>
                     </a>
                 </li>
                 <li>
@@ -109,7 +113,7 @@
                 <li>
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <button type="submit" class="dropdown-item">
+                        <button type="submit" class="dropdown-item text-danger">
                             <i class="bx bx-power-off bx-md me-3"></i><span>Log Out</span>
                         </button>
                     </form>

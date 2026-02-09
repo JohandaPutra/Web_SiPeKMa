@@ -51,19 +51,23 @@
 // APP BRAND / LOGO SECTION
 // ========================================
 
-// Brand container dengan height fixed
+// Brand container dengan height yang lebih besar untuk logo
 .app-brand {
-  height: 120px;
+  height: auto;
+  min-height: 140px;
   position: relative;
+  padding: 1rem 0.5rem;
   
-  // Untuk presentasi: "Logo container dengan height konsisten"
+  // Untuk presentasi: "Logo container dengan height auto untuk flexibility"
 }
 
 // Logo image styling
 .logo-image {
   object-fit: contain;
+  max-width: 100%;
+  height: auto;
   
-  // Untuk presentasi: "Ensure logo maintains aspect ratio"
+  // Untuk presentasi: "Ensure logo maintains aspect ratio dan responsive"
 }
 
 // Mobile menu close button positioning
