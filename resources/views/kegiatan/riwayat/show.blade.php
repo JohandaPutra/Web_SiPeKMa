@@ -256,6 +256,11 @@
                                 $laporanStatus = 'Disetujui';
                                 $laporanBadge = 'success';
                                 $laporanDisabled = false;
+                            } elseif (!$laporanFile && in_array($kegiatan->tahap, ['usulan', 'proposal', 'pendanaan'])) {
+                                // Belum sampai tahap laporan, atau belum upload file
+                                $laporanStatus = 'Belum Upload';
+                                $laporanBadge = 'secondary';
+                                $laporanDisabled = true;
                             } elseif (!$laporanFile && $kegiatan->tahap === 'laporan') {
                                 // Belum upload dan masih di tahap laporan
                                 $laporanStatus = 'Belum Upload';
@@ -272,7 +277,7 @@
                             } else {
                                 $laporanStatus = 'Draft';
                                 $laporanBadge = 'secondary';
-                                $laporanDisabled = false;
+                                $laporanDisabled = true;
                             }
                             @endphp
                             <span class="badge bg-{{ $laporanBadge }} mb-2">{{ $laporanStatus }}</span><br>
