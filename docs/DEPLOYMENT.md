@@ -63,7 +63,7 @@
 
 ---
 
-## 🖥️ Server Requirements
+## �️ Server Requirements
 
 ### Minimum Requirements
 
