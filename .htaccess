@@ -1,0 +1,33 @@
+<IfModule mod_rewrite.c>
+    # Redirect all requests ke public directory
+    RewriteEngine On
+    
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+    
+    # Send Requests To Public Folder
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ /public/$1 [L,QSA]
+</IfModule>
+
+# Block access to sensitive files
+<FilesMatch "^\.env">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "^composer\.(json|lock)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "^package(-lock)?\.json">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
