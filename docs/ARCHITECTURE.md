@@ -126,7 +126,6 @@ Web_SiPeKMa/
 │   │   ├── Controllers/          # Request handlers
 │   │   │   ├── Auth/             # Authentication controllers
 │   │   │   ├── KegiatanController.php
-│   │   │   ├── UsulanKegiatanController.php
 │   │   │   └── UserController.php
 │   │   └── Middleware/           # Request filters
 │   │       ├── Authenticate.php

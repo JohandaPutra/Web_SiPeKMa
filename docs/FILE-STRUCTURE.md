@@ -92,7 +92,6 @@
 | `Controllers/Master/ProdiController.php` | Master program studi |
 | `Controllers/DashboardController.php` | Dashboard analytics |
 | `Controllers/UsersController.php` | User management |
-| `Controllers/UsulanKegiatanController.php` | Usulan kegiatan CRUD |
 
 ### Models Structure
 
@@ -103,11 +102,9 @@
 | `JenisPendanaan.php` | jenis_pendanaans | id |
 | `Kegiatan.php` | kegiatans | id |
 | `KegiatanFile.php` | kegiatan_files | id |
-| `Notification.php` | notifications | id |
 | `Prodi.php` | prodis | id |
 | `Role.php` | roles | id |
 | `User.php` | users | id |
-| `UsulanKegiatan.php` | usulan_kegiatans | id |
 
 ### Service Providers
 
@@ -472,7 +469,7 @@
 
 | Type | Convention | Example |
 |------|------------|---------|
-| Controller | `{Feature}Controller.php` | `UsulanKegiatanController.php` |
+| Controller | `{Feature}Controller.php` | `KegiatanController.php` |
 | Model | `{EntityName}.php` (PascalCase) | `JenisKegiatan.php` |
 | Middleware | `{Name}Middleware.php` | `CheckRole.php` |
 | Provider | `{Name}ServiceProvider.php` | `MenuServiceProvider.php` |
@@ -491,7 +488,7 @@
 
 | Type | Pattern | Example |
 |------|---------|---------|
-| Feature views | `{feature}/{action}.blade.php` | `usulan-kegiatan/create.blade.php` |
+| Feature views | `{feature}/{action}.blade.php` | `kegiatan/create.blade.php` |
 | Layouts | `layouts/{name}Layout.blade.php` | `contentNavbarLayout.blade.php` |
 | Sections | `layouts/sections/{name}/{file}.blade.php` | `layouts/sections/menu/verticalMenu.blade.php` |
 | Partials | `_partials/{name}.blade.php` | `_partials/toast.blade.php` |
@@ -541,17 +538,17 @@
 
 ## Cara Mencari File
 
-### By Feature (Contoh: Usulan Kegiatan)
+### By Feature (Contoh: Kegiatan)
 
 | Component | Path |
 |-----------|------|
-| Controller | `app/Http/Controllers/UsulanKegiatanController.php` |
-| Model | `app/Models/UsulanKegiatan.php` |
-| Migration | `database/migrations/*_create_usulan_kegiatans_table.php` |
-| Seeder | `database/seeders/UsulanKegiatanSeeder.php` (if exists) |
-| Routes | `routes/web.php` (search "usulan-kegiatan") |
-| Views | `resources/views/usulan-kegiatan/` |
-| Menu Entry | `resources/menu/verticalMenu.json` (search "Usulan") |
+| Controller | `app/Http/Controllers/KegiatanController.php` |
+| Model | `app/Models/Kegiatan.php` |
+| Migration | `database/migrations/*_create_kegiatans_table.php` |
+| Seeder | `database/seeders/KegiatanSeeder.php` (if exists) |
+| Routes | `routes/web.php` (search "kegiatan") |
+| Views | `resources/views/kegiatan/` |
+| Menu Entry | `resources/menu/verticalMenu.json` (search "Kegiatan") |
 
 ### By Type (Contoh: Styles)
 

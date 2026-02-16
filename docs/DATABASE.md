@@ -30,7 +30,7 @@
 | **Charset** | utf8mb4 |
 | **Collation** | utf8mb4_unicode_ci |
 | **Engine** | InnoDB |
-| **Total Tables** | 11 tables |
+| **Total Tables** | 16 tables |
 | **Framework** | Laravel 11 Eloquent ORM |
 
 ### Database Purpose
@@ -83,17 +83,22 @@ DB_PASSWORD=
 
 | # | Table Name | Purpose | Records (Est.) | Relations |
 |---|------------|---------|----------------|-----------|
-| 1 | `roles` | User roles (Super Admin, Admin, BEM, HIMA, Finance) | 5 | → users |
-| 2 | `prodis` | Program studi (TI, SI, dll) | 15+ | → users |
-| 3 | `users` | System users (mahasiswa, admin) | 50+ | → kegiatans, approval_histories |
+| 1 | `roles` | User roles (7 roles) | 7 | → users |
+| 2 | `prodis` | Program studi | 15+ | → users |
+| 3 | `users` | System users | 50+ | → kegiatans, approval_histories |
 | 4 | `kegiatans` | Main kegiatan data | 100+ | → kegiatan_files, approval_histories |
 | 5 | `approval_histories` | Approval tracking log | 200+ | ← kegiatans, users |
 | 6 | `kegiatan_files` | File attachments (proposal, RAB, LPJ) | 150+ | ← kegiatans |
 | 7 | `jenis_kegiatans` | Kegiatan types | 8 | → kegiatans |
 | 8 | `jenis_pendanaans` | Pendanaan types | 5 | → kegiatans |
-| 9 | `cache` | Laravel cache storage | Variable | Framework |
-| 10 | `cache_locks` | Cache lock mechanism | Variable | Framework |
-| 11 | `jobs` | Queue jobs | Variable | Framework |
+| 9 | `password_reset_tokens` | Password reset tokens | Variable | Framework |
+| 10 | `sessions` | User sessions | Variable | Framework |
+| 11 | `migrations` | Laravel migration tracker | 16 | Framework |
+| 12 | `cache` | Laravel cache storage | Variable | Framework |
+| 13 | `cache_locks` | Cache lock mechanism | Variable | Framework |
+| 14 | `jobs` | Queue jobs | Variable | Framework |
+| 15 | `job_batches` | Job batches | Variable | Framework |
+| 16 | `failed_jobs` | Failed jobs log | Variable | Framework |
 
 ### Table Size Estimate
 
@@ -935,7 +940,6 @@ php artisan backup:list
 
 | Enhancement | Priority | Description |
 |-------------|----------|-------------|
-| Notifications table | 🔴 High | Real-time notifications |
 | Audit logs | 🟡 Medium | Track all data changes |
 | Comments table | 🟡 Medium | Comments on kegiatan |
 | Tags table | 🟢 Low | Tag kegiatan for filtering |

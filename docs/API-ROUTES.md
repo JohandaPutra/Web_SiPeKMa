@@ -10,12 +10,11 @@
 2. [Route Structure](#route-structure)
 3. [Authentication Routes](#authentication-routes)
 4. [Kegiatan Routes](#kegiatan-routes)
-5. [Usulan Kegiatan Routes](#usulan-kegiatan-routes)
-6. [User Management Routes](#user-management-routes)
-7. [Master Data Routes](#master-data-routes)
-8. [File Management Routes](#file-management-routes)
-9. [Route Middleware](#route-middleware)
-10. [Named Routes Reference](#named-routes-reference)
+5. [User Management Routes](#user-management-routes)
+6. [Master Data Routes](#master-data-routes)
+7. [File Management Routes](#file-management-routes)
+8. [Route Middleware](#route-middleware)
+9. [Named Routes Reference](#named-routes-reference)
 
 ---
 
@@ -71,7 +70,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KegiatanController;
-use App\Http\Controllers\UsulanKegiatanController;
 use App\Http\Controllers\UserController;
 
 // ... route definitions
@@ -212,7 +210,7 @@ Route::middleware(['auth'])->group(function () {
 
 ---
 
-## 📝 Usulan Kegiatan Routes
+## � Master Data Routes
 
 ### Resource Routes
 
@@ -616,3 +614,4 @@ Route::middleware(['throttle:60,1'])->group(function () {
 **Version:** 1.0.0  
 **Total Routes:** ~57 routes  
 **Status:** ✅ Complete
+
